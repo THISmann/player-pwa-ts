@@ -3,18 +3,16 @@ import HomeView from '../views/HomeView.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
-    path: '/',
+    //path: '/:current_radio_id/:url_server_radio/:url_flux_radio/:server_type',
+    path: '/:route_url_flux_radio/:route_server_type/:route_url_server_radio',
     name: 'home',
     component: HomeView
   },
   {
-    path: '/about',
-    name: 'about',
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () => import(/* webpackChunkName: "about" */ '../views/AboutView.vue')
-  }
+    path: '/',
+    name: 'home',
+    component: HomeView
+  }  
 ]
 
 const router = createRouter({
