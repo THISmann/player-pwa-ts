@@ -4,7 +4,7 @@ import HomeView from '../views/HomeView.vue'
 const routes: Array<RouteRecordRaw> = [
   {
     //path: '/:current_radio_id/:url_server_radio/:url_flux_radio/:server_type',
-    path: '/:route_url_flux_radio/:route_server_type/:route_url_server_radio',
+    path: '/:route_url_flux_radio/:route_server_type/:route_url_api_radio',
     name: 'home',
     component: HomeView
   },

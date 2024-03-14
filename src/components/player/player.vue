@@ -329,9 +329,9 @@ const getCurrentTrack = async () => {
                 //await fetchData('https://radio.pro-fhi.net:19000/currentsong?sid=1');
                 //setInterval(await fetchData(localStorage.getItem('url_server_radio')), 1000000);
 
-                await fetchData(localStorage.getItem('playerUrlServer'));
+                await fetchData(localStorage.getItem('playerUrlApi'));
                 setInterval(async () => {
-                    await fetchData(localStorage.getItem('playerUrlServer'));
+                    await fetchData(localStorage.getItem('playerUrlApi'));
                 }, 30000);
                 // fetch the historics
 
@@ -567,10 +567,10 @@ watch(message, (newValue, oldValue) => {
 onMounted(() => {
     // Fetch metadata when the component is mounted
     const route = useRoute();
-    const { route_current_radio_id, route_url_server_radio, route_url_flux_radio, route_server_type } = route.query;
+    const { route_current_radio_id, route_url_api_radio, route_url_flux_radio, route_server_type } = route.query;
     localStorage.setItem("playerServerType", route_server_type);
     localStorage.setItem("playerUrlFlux", route_url_flux_radio);
-    localStorage.setItem("playerUrlServer", route_url_server_radio);
+    localStorage.setItem("playerUrlApi", route_url_api_radio);
 
 
     loading.value = true;
