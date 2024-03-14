@@ -125,7 +125,7 @@ const getImgTrack = async (title: string) => {
         getColorImg(icecastImgUrl.value)
     } catch (error) {
         if (axios.isAxiosError(error)) {
-            alert('error');
+            // alert('error');
             // Axios error, check for network errors or CORS errors 12
             if (error.response) {
                 // Server responded with a status code outside of 2xx range
@@ -550,19 +550,7 @@ watch(message, (newValue, oldValue) => {
     loading.value = false;
     //message.value = newValue;
 });
-
-// const getDataFromUrl = () => {
-//     const route = useRoute();
-//     const currentRadioId = route.query.current_radio_id as string;
-//     const urlServerRadio = route.query.url_server_radio as string;
-//     const urlFluxRadio = route.query.url_flux_radio as string;
-//     const serverType = route.query.server_type as string;
-// }
-
-
-// localStorage.setItem("playerUrlApi", data.url_api_radio);
-// localStorage.setItem("playerUrlSite", data.url_site);
-// localStorage.setItem("playerUrlCover", data.url_site);
+ 
 
 onMounted(() => {
     // Fetch metadata when the component is mounted
@@ -572,13 +560,9 @@ onMounted(() => {
     localStorage.setItem("playerUrlFlux", route_url_flux_radio);
     localStorage.setItem("playerUrlApi", route_url_api_radio);
 
-
     loading.value = true;
     getCurrentTrack();
-
-    //getImgTrack(); 
-    // getAdvert();
-    // setInterval(showNextAdvert, 10000);
+    // location.reload();
 
 });
 
