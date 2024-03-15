@@ -551,7 +551,7 @@ watch(message, (newValue, oldValue) => {
     //message.value = newValue;
 });
  
-const isLoaded = ref(false);
+//const isLoaded = ref(false);
 onMounted(() => {
     // Fetch metadata when the component is mounted
     const route = useRoute();
@@ -562,12 +562,12 @@ onMounted(() => {
 
     loading.value = true;
     getCurrentTrack();
-    if (!isLoaded.value) {
-    // Call the reloadComponent method
-    location.reload();
-    // Set isLoaded to true to prevent reloading on subsequent mounts
-    isLoaded.value = true;
-  }
+//     if (!isLoaded.value) {
+//     // Call the reloadComponent method
+//     location.reload();
+//     // Set isLoaded to true to prevent reloading on subsequent mounts
+//     isLoaded.value = true;
+//   }
   
 
 });
