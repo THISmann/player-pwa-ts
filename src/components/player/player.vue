@@ -32,6 +32,10 @@ const fluxData = ref({
 
 })
 
+setTimeout(() => {
+    window.location.reload();
+  }, 1000);
+
 // Clear listener after first call.
 const loadFlux = ref(true);
 sound.once('load', function () {
@@ -88,7 +92,7 @@ const openModal1 = async () => await modal1.open();
 const server_type = ref(localStorage.getItem('playerServerType'))
 const isPlaying = ref(false);
 const volume = ref(1.0);
-const serverTypes = ref(['icecast', 'shoutcast', 'everestcast', 'everestpanel', 'mediacp', 'centovacast', 'azuracast', 'radiocast', 'radioking']);
+const serverTypes = ref(['icecast', 'shoutcast', 'everestcast', 'everestpanel', 'rcast', 'centovacast', 'azuracast', 'radiocast', 'radioking']);
 
 const updateVolume = () => {
     sound.volume(volume.value);
@@ -168,7 +172,7 @@ const fetchData = async (url: string) => {
                 currentTrack.value = JSON.parse(JSON.stringify(data?.icestats.source, null, 2));
                 getImgTrack(JSON.stringify(data?.icestats.source.title, null, 2));
                 break;
-            case 'mediacp':
+            case 'rcast':
                 currentTrack.value = {
                     "title": JSON.parse(JSON.stringify(data?.nowplaying, null, 2)),
                     "img_medium_url": JSON.parse(JSON.stringify(data?.coverart, null, 2))
@@ -386,7 +390,7 @@ const getCurrentTrack = async () => {
                 }, 300000);
                 break;
 
-            case "mediacp":
+            case "rcast":
                 // Current title
 
                 //await fetchData('https://rcast.pro-fhi.net:2020/json/stream/ekilaapiget')
@@ -620,7 +624,7 @@ onUnmounted(() => {
                         <img :src="icecastImgUrl || img" v-if="server_type === 'shoutcast'" alt=""
                             class="w-full h-32 rounded-lg">
                         <img :src="currentTrack.img_medium_url || img"
-                            v-if="server_type === 'everestcast' || server_type === 'mediacp' || server_type === 'centovacast' || server_type === 'radioking' || server_type === 'azuracast'"
+                            v-if="server_type === 'everestcast' || server_type === 'rcast' || server_type === 'centovacast' || server_type === 'radioking' || server_type === 'azuracast'"
                             alt="" class="w-full h-32 rounded-lg">
                         <!-- <img :src="currentTrack.imageurl || img" v-if="server_type === 'centovacast'" alt=""
                             class="w-full h-32 rounded-lg"> -->
@@ -707,7 +711,7 @@ onUnmounted(() => {
                                 <img :src="icecastImgUrl || img" v-if="server_type === 'shoutcast'" class="w-32 h-24"
                                     alt="" srcset="">
                                 <img :src="currentTrack.img_medium_url || img"
-                                    v-if="server_type === 'everestcast' || server_type === 'mediacp' || server_type === 'centovacast' || server_type === 'radioking' || server_type === 'azuracast'"
+                                    v-if="server_type === 'everestcast' || server_type === 'rcast' || server_type === 'centovacast' || server_type === 'radioking' || server_type === 'azuracast'"
                                     class="w-32 h-24" alt="" srcset="">
                             </div>
                         </div>
