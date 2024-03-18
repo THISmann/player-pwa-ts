@@ -33,7 +33,7 @@ const fluxData = ref({
 })
 
 
-window.location.reload();
+//window.location.reload();
 
 
 // Clear listener after first call.
