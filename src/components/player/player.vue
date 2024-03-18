@@ -32,9 +32,9 @@ const fluxData = ref({
 
 })
 
-setTimeout(() => {
-    window.location.reload();
-  }, 1000);
+
+window.location.reload();
+
 
 // Clear listener after first call.
 const loadFlux = ref(true);
@@ -554,7 +554,7 @@ watch(message, (newValue, oldValue) => {
     loading.value = false;
     //message.value = newValue;
 });
- 
+
 //const isLoaded = ref(false);
 onMounted(() => {
     // Fetch metadata when the component is mounted
@@ -566,13 +566,13 @@ onMounted(() => {
 
     loading.value = true;
     getCurrentTrack();
-//     if (!isLoaded.value) {
-//     // Call the reloadComponent method
-//     location.reload();
-//     // Set isLoaded to true to prevent reloading on subsequent mounts
-//     isLoaded.value = true;
-//   }
-  
+    //     if (!isLoaded.value) {
+    //     // Call the reloadComponent method
+    //     location.reload();
+    //     // Set isLoaded to true to prevent reloading on subsequent mounts
+    //     isLoaded.value = true;
+    //   }
+
 
 });
 
@@ -647,7 +647,7 @@ onUnmounted(() => {
                                             fill="currentColor" />
                                     </svg>
                                     chargement ... </span> -->
-                                {{currentTrack.title }}
+                                {{ currentTrack.title }}
                             </h4>
 
                         </div>
