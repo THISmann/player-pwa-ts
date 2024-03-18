@@ -339,71 +339,71 @@ const getCurrentTrack = async () => {
                 }, 30000);
                 // fetch the historics
 
-                await getHistoryTracks('https://ekila1.pro-fhi.net:1520/api/v2/history/?format=json&limit=5');
-                setInterval(async () => {
-                    await getHistoryTracks('https://ekila1.pro-fhi.net:1520/api/v2/history/?format=json&limit=5');
-                }, 300000);
+                await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'));
+                // setInterval(async () => {
+                //     await getHistoryTracks('https://ekila1.pro-fhi.net:1520/api/v2/history/?format=json&limit=5');
+                // }, 300000);
                 break;
             case "icecast":
                 // fetch the recent title  
                 // await fetchData('https://radio13.pro-fhi.net:19008/status-json.xsl');
-                await fetchData(localStorage.getItem('playerUrlServer'));
+                await fetchData(localStorage.getItem('playerUrlApi'));
                 setInterval(async () => {
-                    await fetchData(localStorage.getItem('playerUrlServer'));
+                    await fetchData(localStorage.getItem('playerUrlApi'));
                 }, 30000);
 
 
                 // fetch the historics tracks 
-                await getHistoryTracks('https://ekila1.pro-fhi.net:1520/api/v2/history/?format=json&limit=5');
-                setInterval(async () => {
-                    await getHistoryTracks('https://ekila1.pro-fhi.net:1520/api/v2/history/?format=json&limit=5');
-                }, 300000);
+                await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'));
+                // setInterval(async () => {
+                //     await getHistoryTracks('https://ekila1.pro-fhi.net:1520/api/v2/history/?format=json&limit=5');
+                // }, 300000);
                 break;
             case "everestcast":
                 // Current title
                 // await fetchData('https://ecmanager.pro-fhi.net:1030/api/v2/history/?limit=1&offset=0&format=json')
-                await fetchData(localStorage.getItem('playerUrlServer'));
+                await fetchData(localStorage.getItem('playerUrlApi'));
                 setInterval(async () => {
-                    await fetchData(localStorage.getItem('playerUrlServer'));
+                    await fetchData(localStorage.getItem('playerUrlApi'));
                 }, 30000);
 
                 // fetch the historics tracks 
-                await getHistoryTracks('https://ekila1.pro-fhi.net:1520/api/v2/history/?format=json&limit=5');
-                setInterval(async () => {
-                    await getHistoryTracks('https://ekila1.pro-fhi.net:1520/api/v2/history/?format=json&limit=5');
-                }, 300000);
+                await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'));
+                // setInterval(async () => {
+                //     await getHistoryTracks('https://ekila1.pro-fhi.net:1520/api/v2/history/?format=json&limit=5');
+                // }, 300000);
 
                 break;
             case "everestpanel":
                 // fetch the current title  
                 //await fetchData('https://evcp1.pro-fhi.net/widget/get-current-track-api?station=3');
-                await fetchData(localStorage.getItem('playerUrlServer'));
+                await fetchData(localStorage.getItem('playerUrlApi'));
                 setInterval(async () => {
-                    await fetchData(localStorage.getItem('playerUrlServer'));
+                    await fetchData(localStorage.getItem('playerUrlApi'));
                 }, 30000);
 
                 // fetch the  historique not working
                 // ---- endpoint api don't working now it is just a remplacement
-                await getHistoryTracks('https://evcp1.pro-fhi.net/widget/get-past-tracks-api/1');
-                setInterval(async () => {
-                    await getHistoryTracks('https://evcp1.pro-fhi.net/widget/get-past-tracks-api/1');
-                }, 300000);
+                await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'));
+                // setInterval(async () => {
+                //     await getHistoryTracks('https://evcp1.pro-fhi.net/widget/get-past-tracks-api/1');
+                // }, 300000);
                 break;
 
             case "rcast":
                 // Current title
 
                 //await fetchData('https://rcast.pro-fhi.net:2020/json/stream/ekilaapiget')
-                await fetchData(localStorage.getItem('playerUrlServer'));
+                await fetchData(localStorage.getItem('playerUrlApi'));
                 setInterval(async () => {
-                    await fetchData(localStorage.getItem('playerUrlServer'));
+                    await fetchData(localStorage.getItem('playerUrlApi'));
                 }, 30000);
 
                 // fetch historics of track
-                await getHistoryTracksMP('https://rcast.pro-fhi.net:2020/json/stream/ekilaapiget');
-                setInterval(async () => {
-                    await getHistoryTracksMP('https://rcast.pro-fhi.net:2020/json/stream/ekilaapiget');
-                }, 300000);
+                await getHistoryTracksMP(localStorage.getItem('playerUrlApiHistory'));
+                // setInterval(async () => {
+                //     await getHistoryTracksMP('https://rcast.pro-fhi.net:2020/json/stream/ekilaapiget');
+                // }, 300000);
 
                 break;
 
@@ -411,47 +411,47 @@ const getCurrentTrack = async () => {
                 // Current title 
 
                 //await fetchData('https://radio.pro-fhi.net:2199/rpc/getapi/streaminfo.get')
-                await fetchData(localStorage.getItem('playerUrlServer'));
+                await fetchData(localStorage.getItem('playerUrlApi'));
                 setInterval(async () => {
-                    await fetchData(localStorage.getItem('playerUrlServer'));
+                    await fetchData(localStorage.getItem('playerUrlApi'));
                 }, 30000);
 
                 // historisque of tracks 
-                await getHistoryTracks('https://radio.pro-fhi.net:2199/recentfeed/getapi/json');
-                setInterval(async () => {
-                    await getHistoryTracks('https://radio.pro-fhi.net:2199/recentfeed/getapi/json');
-                }, 300000);
+                await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'));
+                // setInterval(async () => {
+                //     await getHistoryTracks('https://radio.pro-fhi.net:2199/recentfeed/getapi/json');
+                // }, 300000);
                 break;
 
             case "azuracast":
                 // Current title 
 
                 //await fetchData('https://demo.azuracast.com/api/nowplaying_static/azuratest_radio.json')
-                await fetchData(localStorage.getItem('playerUrlServer'));
+                await fetchData(localStorage.getItem('playerUrlApi'));
                 setInterval(async () => {
-                    await fetchData(localStorage.getItem('playerUrlServer'));
+                    await fetchData(localStorage.getItem('playerUrlApi'));
                 }, 30000);
 
                 // historisque of player
-                await getHistoryTracks('https://demo.azuracast.com/api/nowplaying_static/azuratest_radio.json');
-                setInterval(async () => {
-                    await getHistoryTracks('https://demo.azuracast.com/api/nowplaying_static/azuratest_radio.json');
-                }, 300000);
+                await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'));
+                // setInterval(async () => {
+                //     await getHistoryTracks('https://demo.azuracast.com/api/nowplaying_static/azuratest_radio.json');
+                // }, 300000);
                 break;
 
             case "radioking":
                 // Current title 
                 //await fetchData('https://api.radioking.io/widget/radio/web-radio-latinos/track/ckoi?limit=1');
-                await fetchData(localStorage.getItem('playerUrlServer'));
+                await fetchData(localStorage.getItem('playerUrlApi'));
                 setInterval(async () => {
-                    await fetchData(localStorage.getItem('playerUrlServer'));
+                    await fetchData(localStorage.getItem('playerUrlApi'));
                 }, 30000);
-
+                
                 // historisque of player
-                await getHistoryTracks('https://api.radioking.io/widget/radio/web-radio-latinos/track/ckoi?limit=5');
-                setInterval(async () => {
-                    await getHistoryTracks('https://api.radioking.io/widget/radio/web-radio-latinos/track/ckoi?limit=5');
-                }, 300000);
+                await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'));
+                // setInterval(async () => {
+                //     await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'));
+                // }, 300000);
                 break;
 
             default:
@@ -559,10 +559,11 @@ watch(message, (newValue, oldValue) => {
 onMounted(() => {
     // Fetch metadata when the component is mounted
     const route = useRoute();
-    const { route_current_radio_id, route_url_api_radio, route_url_flux_radio, route_server_type } = route.query;
+    const { route_current_radio_id, route_url_api_radio_history, route_url_api_radio, route_url_flux_radio, route_server_type } = route.query;
     localStorage.setItem("playerServerType", route_server_type);
     localStorage.setItem("playerUrlFlux", route_url_flux_radio);
     localStorage.setItem("playerUrlApi", route_url_api_radio);
+    localStorage.setItem("playerUrlApiHistory", route_url_api_radio_history)
 
     loading.value = true;
     getCurrentTrack();
@@ -854,7 +855,7 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="md:hidden container-fluid h-screen">
-            <h1> mobile </h1>
+            <!-- <h1> mobile </h1> -->
             <div class="mx-11 mt-4 p-1 rounded-lg bg-gradient-to-r from-gray-200/25 to-gray-100 w-72 h-80">
                 <div class="m-5 h-72">
                     <img :src="icecastImgUrl || img" alt="" class="rounded-lg h-60">
