@@ -169,7 +169,7 @@ const fetchData = async (url: string) => {
 
         switch (localStorage.getItem("playerServerType")) {
             case 'icecast':
-                currentTrack.value = JSON.parse(JSON.stringify(data?.icestats.source, null, 2));
+                currentTrack.value = JSON.parse(JSON.stringify(data?.icestats.source[0], null, 2));
                 getImgTrack(JSON.stringify(data?.icestats.source.title, null, 2));
                 break;
             case 'rcast':
