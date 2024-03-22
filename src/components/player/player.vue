@@ -29,8 +29,8 @@ const sound = new Howl({
 });
 const fluxData = ref({
     "loading": true,
-
 })
+
 
 
 //window.location.reload();
@@ -564,7 +564,7 @@ onMounted(() => {
     localStorage.setItem("playerUrlFlux", route_url_flux_radio);
     localStorage.setItem("playerUrlApi", route_url_api_radio);
     localStorage.setItem("playerUrlApiHistory", route_url_api_radio_history)
-
+    // alert("clickez ici");
     loading.value = true;
     getCurrentTrack();
     //     if (!isLoaded.value) {
