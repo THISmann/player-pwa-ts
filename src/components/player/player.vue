@@ -563,7 +563,7 @@ watch(message, (newValue, oldValue) => {
 //     getCurrentTrack();
 // })
 
-onMounted(() => {
+onMounted(async () => {
     // Fetch metadata when the component is mounted
     const route = useRoute();
     const { route_access_token, route_current_radio_id, route_url_api_radio_history, route_url_api_radio, route_url_flux_radio, route_server_type } = route.query;
@@ -574,8 +574,8 @@ onMounted(() => {
     localStorage.setItem("playerAccessToken", route_access_token)
 
     loading.value = true;
-    getCurrentTrack();
-    getAdvert();
+    await getCurrentTrack();
+    await getAdvert();
     setInterval(showNextAdvert, 10000);
     //     if (!isLoaded.value) {
     //     // Call the reloadComponent method
