@@ -12,11 +12,81 @@ import { useRouter } from 'vue-router';
 import { useRoute } from 'vue-router';
 import InstallButton from './installButton.vue'
 const router = useRouter();
+const route = useRoute();
 
 //const advertStore = useAdvertStore();
 //import refreshToken from "../RefreshToken";
-import io from 'socket.io-client';
-const socket = io('http://localhost:3000');
+//import io from 'socket.io-client';
+//const socket = io('http://localhost:3000');
+//const socket = io(`ws://localhost:8030/ws/radios/?token=${token}`);
+const chatSocket = ref<WebSocket | null>(null);
+const publicitySocket = ref<WebSocket | null>(null);
+
+// Function to handle WebSocket messages
+const handleMessage = (e: MessageEvent) => {
+    const data = JSON.parse(e.data);
+
+    console.log('route_current_radio_id', localStorage.getItem("playerRadioID"));
+    if (localStorage.getItem("playerRadioID") == data.radio.id) {
+        switch (data.action) {
+            case 'update':
+                console.log('mise a jour');
+                console.log(data.radio);
+                localStorage.setItem("playerServerType", data.radio.server_type);
+                localStorage.setItem("playerUrlFlux", data.radio.flux_radio);
+                localStorage.setItem("playerUrlApi", data.radio.url_api_radio);
+                localStorage.setItem("playerUrlApiHistory", data.radio.url_api_radio_history);
+                break;
+            case 'delete':
+                console.log('suppression');
+                console.log(data.radio)
+                break;
+        }
+    }
+};
+
+
+const handleMessagePub = (e: MessageEvent) => {
+    const data = JSON.parse(e.data);
+    console.log('handle publicity :', data);
+};
+
+// Function to handle WebSocket close events
+const handleClose = (e: CloseEvent) => {
+    console.log(e);
+    console.error('Chat socket closed unexpectedly');
+};
+
+// Function to handle WebSocket close events
+const handleClosePub = (e: CloseEvent) => {
+    console.log(e);
+};
+
+// Function to handle WebSocket open events
+const handleOpen = () => {
+    if (chatSocket.value) {
+        chatSocket.value.send(
+            JSON.stringify({
+                action: 'subscribe_to_radio_activity',
+                request_id: new Date().getTime(),
+            }),
+        );
+    }
+};
+
+// Function to handle WebSocket open events
+const handleOpenPub = () => {
+    if (publicitySocket.value) {
+        publicitySocket.value.send(
+            JSON.stringify({
+                action: 'subscribe_to_publicity_activity',
+                request_id: new Date().getTime(),
+            }),
+        );
+    }
+};
+
+
 const play = ref(true)
 const playMobile = ref(true)
 const STREAMING_LINK = localStorage.getItem("playerUrlFlux")
@@ -31,10 +101,7 @@ const fluxData = ref({
     "loading": true,
 })
 
-
-
 //window.location.reload();
-
 
 // Clear listener after first call.
 const loadFlux = ref(true);
@@ -88,7 +155,6 @@ const createUseModal = (component: any, title: string) => {
 const modal1 = createUseModal(BluetoothModal, "Bluetooth settings");
 const openModal1 = async () => await modal1.open();
 
-
 const server_type = ref(localStorage.getItem('playerServerType'))
 const isPlaying = ref(false);
 const volume = ref(1.0);
@@ -113,7 +179,6 @@ const togglePlayback = () => {
 
 const historyTrack = ref([]);
 const icecastImgUrl = ref('');
-
 
 const getImgTrack = async (title: string) => {
     try {
@@ -549,19 +614,14 @@ const messages = ref<string[]>([]);
 //     message.value = msg;
 // });
 
-watch(message, (newValue, oldValue) => {
-    console.log('Messages have changed:', newValue);
-    console.log('old message :', oldValue);
-    getImgTrack(newValue);
-    loading.value = false;
-    //message.value = newValue;
-});
+// watch(message, (newValue, oldValue) => {
+//     console.log('Messages have changed:', newValue);
+//     console.log('old message :', oldValue);
+//     getImgTrack(newValue);
+//     loading.value = false;
+//     //message.value = newValue;
+// });
 
-// //const isLoaded = ref(false);
-// mounted(() => {
-//     // Fetch data when the PWA is opened
-//     getCurrentTrack();
-// })
 
 onMounted(async () => {
     // Fetch metadata when the component is mounted
@@ -571,18 +631,35 @@ onMounted(async () => {
     localStorage.setItem("playerUrlFlux", route_url_flux_radio);
     localStorage.setItem("playerUrlApi", route_url_api_radio);
     localStorage.setItem("playerUrlApiHistory", route_url_api_radio_history);
-    localStorage.setItem("playerAccessToken", route_access_token)
+    localStorage.setItem("playerAccessToken", route_access_token);
+    localStorage.setItem("playerRadioID", route_current_radio_id);
 
     loading.value = true;
     await getCurrentTrack();
     await getAdvert();
     setInterval(showNextAdvert, 10000);
-    //     if (!isLoaded.value) {
-    //     // Call the reloadComponent method
-    //     location.reload();
-    //     // Set isLoaded to true to prevent reloading on subsequent mounts
-    //     isLoaded.value = true;
-    //   }
+
+    chatSocket.value = new WebSocket(
+        'ws://localhost:8030/ws/radio/?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzExNjkwMjM1LCJpYXQiOjE3MTE2ODY2MzUsImp0aSI6ImE5ZTAwZmE2NDdmZTQ4OGRiMGY5YzI2Y2RmZmQ5NWM5IiwidXNlcl9pZCI6Mn0.UQ_IBTGCUG5_S0c_7gfvV5_2dVzwWoiIAae7N-jmXRM',
+    );
+
+    publicitySocket.value = new WebSocket(
+        'ws://localhost:8030/ws/publicity/?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzExNjkwMjM1LCJpYXQiOjE3MTE2ODY2MzUsImp0aSI6ImE5ZTAwZmE2NDdmZTQ4OGRiMGY5YzI2Y2RmZmQ5NWM5IiwidXNlcl9pZCI6Mn0.UQ_IBTGCUG5_S0c_7gfvV5_2dVzwWoiIAae7N-jmXRM'
+    )
+
+    if (chatSocket.value) {
+        chatSocket.value.onmessage = handleMessage;
+        chatSocket.value.onclose = handleClose;
+        chatSocket.value.onopen = handleOpen;
+    }
+
+    if (publicitySocket.value) {
+        publicitySocket.value.onmessage = handleMessagePub;
+        publicitySocket.value.onclose = handleClosePub;
+        publicitySocket.value.onopen = handleOpenPub;
+    }
+
+
 });
 
 onUnmounted(() => {
@@ -590,13 +667,18 @@ onUnmounted(() => {
         sound.stop(); // Arrêtez le son
         sound.unload(); // Déchargez la ressource audio
     }
+
+    if (chatSocket.value) {
+        chatSocket.value.close();
+    }
+
 });
 
 </script>
 
 <template>
     <div>
-     
+
         <div :style="{ 'background-color': currentBgColor || '#FF6503' }">
 
             <div class="container-fluid  max-md:hidden h-screen">
