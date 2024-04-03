@@ -957,9 +957,21 @@ onUnmounted(() => {
                 <!-- <h1> mobile </h1> -->
                 <div class="mx-11 mt-4 p-1 rounded-lg bg-gradient-to-r from-gray-200/25 to-gray-100 w-72 h-80">
                     <div class="m-5 h-72">
-                        <img :src="icecastImgUrl || img" alt="" class="rounded-lg h-60">
+                        <!-- <img :src="icecastImgUrl || img" alt="" class="rounded-lg h-60"> -->
                         <!-- <img :src="currentTrack.img_large_url || img" v-if="server_type === 'shoutcast'" alt=""
                         class="rounded-lg h-60"> -->
+
+                        <img :src="icecastImgUrl || img" v-if="server_type === 'icecast'" alt=""
+                            class="w-full h-60 rounded-lg">
+                        <img :src="icecastImgUrl || img" v-if="server_type === 'shoutcast'" alt=""
+                            class="w-full h-60 rounded-lg">
+                        <img :src="currentTrack.img_medium_url || img"
+                            v-if="server_type === 'everestcast' || server_type === 'rcast' || server_type === 'centovacast' || server_type === 'radioking' || server_type === 'azuracast'"
+                            alt="" class="w-full h-60 rounded-lg">
+
+                        <h1 class="mt-4 text-white text-left text-sm bg-gray-400 m-1 p-1"> {{ currentTrack.title }}
+                        </h1>
+
                         <span><svg aria-hidden="true" role="status" class="inline w-4 h-4 me-3 text-white animate-spin"
                                 viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path
@@ -1042,9 +1054,11 @@ onUnmounted(() => {
                 <div class="flex p-1 mx-7 overflow-x-auto">
                     <div class="w-28 h-28 border-black-300/75 rounded-lg shadow-2xl p-1 m-1"
                         v-for="data in historyTrack" :key="data.id">
-                        <!-- <img :src="data.img_url" class="rounded-lg w-24 h-24" alt="" srcset="">
-                     <h1 class="text-left mx-1 text-sm text-gray-400"> {{ message }} </h1>   -->
+                        <img :src="data.img_url" class="rounded-lg w-24 h-24" alt="" srcset="">
                     </div>
+                </div>
+                <div class="flex p-1 mx-7 overflow-x-auto">
+                    <InstallButton />
                 </div>
             </div>
         </div>
