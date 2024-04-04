@@ -679,7 +679,7 @@ onUnmounted(() => {
 <template>
     <div>
 
-        <div :style="{ 'background-color': currentBgColor || '#FF6503' }">
+        <div class="container-fluid  h-screen  bg-fixed" :style="{ 'background-color': currentBgColor || '#FF6503' }">
 
             <div class="container-fluid  max-md:hidden h-screen">
                 <ModalsContainer />
@@ -1051,10 +1051,11 @@ onUnmounted(() => {
                         </svg>
                     </VButton>
                 </div>
-                <div class="flex p-1 mx-7 overflow-x-auto">
-                    <div class="w-28 h-28 border-black-300/75 rounded-lg shadow-2xl p-1 m-1"
+                <div class="p-1 mx-7 overflow-y-auto  ">
+                    <div class="flex sm:w-full sm:h-28 border-black-300/75 rounded-lg shadow-2xl p-1 m-1 scroll "
                         v-for="data in historyTrack" :key="data.id">
                         <img :src="data.img_url" class="rounded-lg w-24 h-24" alt="" srcset="">
+                        <h1 class="text-left my-4 mx-1 text-sm text-gray-400 p-2"> {{ data.title }} </h1>
                     </div>
                 </div>
                 <div class="flex p-1 mx-7 overflow-x-auto">
