@@ -626,13 +626,17 @@ const messages = ref<string[]>([]);
 onMounted(async () => {
     // Fetch metadata when the component is mounted
     const route = useRoute();
-    const { route_access_token, route_current_radio_id, route_url_api_radio_history, route_url_api_radio, route_url_flux_radio, route_server_type } = route.query;
-    localStorage.setItem("playerServerType", route_server_type);
-    localStorage.setItem("playerUrlFlux", route_url_flux_radio);
-    localStorage.setItem("playerUrlApi", route_url_api_radio);
-    localStorage.setItem("playerUrlApiHistory", route_url_api_radio_history);
-    localStorage.setItem("playerAccessToken", route_access_token);
-    localStorage.setItem("playerRadioID", route_current_radio_id);
+    //const { route_access_token, route_current_radio_id, route_url_api_radio_history, route_url_api_radio, route_url_flux_radio, route_server_type } = route.query;
+    
+    const { route_name } = route.query;
+    localStorage.setItem("radioName", route_name);
+
+    // localStorage.setItem("playerServerType", route_server_type);
+    // localStorage.setItem("playerUrlFlux", route_url_flux_radio);
+    // localStorage.setItem("playerUrlApi", route_url_api_radio);
+    // localStorage.setItem("playerUrlApiHistory", route_url_api_radio_history);
+    // localStorage.setItem("playerAccessToken", route_access_token);
+    // localStorage.setItem("playerRadioID", route_current_radio_id);
 
     loading.value = true;
     await getCurrentTrack();
