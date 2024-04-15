@@ -8,19 +8,63 @@ import axios from 'axios';
 //import { useAdvertStore } from '@/store/advertStore';
 import img from './logo.png';
 import themeColor from './colorExtraction';
-import { useRouter } from 'vue-router';
 import { useRoute } from 'vue-router';
 import InstallButton from './installButton.vue'
-const router = useRouter();
-const route = useRoute();
-
-//const advertStore = useAdvertStore();
-//import refreshToken from "../RefreshToken";
-//import io from 'socket.io-client';
-//const socket = io('http://localhost:3000');
-//const socket = io(`ws://localhost:8030/ws/radios/?token=${token}`);
 const chatSocket = ref<WebSocket | null>(null);
 const publicitySocket = ref<WebSocket | null>(null);
+import { getCurrentTrack } from './currentTrackFetcher'
+import { fetchAndProcessRadioData } from './fetchAndProcessRadioData'
+import { getHistoryTracks } from './historyFetcher'
+
+// Initialize currentTrack as a reactive object
+
+
+
+const currentTrack = ref([]);
+const historyTrack = ref([]);
+
+const getRadioByName = async (radioName: string) => {
+    try {
+        if (!radioName) {
+            console.error('Radio name is missing in localStorage');
+            return;
+        }
+
+        const response = await axios.get(`http://localhost:8030/api/radios/${radioName}`, {
+            headers: {
+                //'Authorization': `Ekila ${localStorage.getItem("access-token")}`
+                'Authorization': 'Ekila eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzEzMTg5NDIwLCJpYXQiOjE3MTMxODU4MjAsImp0aSI6IjhmNDU0OTg1OGQyZDRmYTA4MzEyMDEzMTliZGRmMmJjIiwidXNlcl9pZCI6Mn0.--Y4W_d-y8kOZfakN423UcCdRZ12tNSum2Tdsnr3I9o'
+            }
+        });
+
+        console.log(response.data);
+        const responseData = response.data;
+
+        if (responseData) {
+            localStorage.setItem("playerServerType", responseData.server_type);
+            localStorage.setItem("playerUrlFlux", responseData.url_flux_radio);
+            localStorage.setItem("playerUrlApi", responseData.url_api_radio_current_song);
+            localStorage.setItem("playerUrlApiHistory", responseData.url_api_radio_history);
+            localStorage.setItem("playerAccessToken", responseData.access_token);
+            localStorage.setItem("playerRadioID", responseData.id);
+        } 
+        
+        currentTrack.value = await fetchAndProcessRadioData(localStorage.getItem('playerUrlApi'));
+        historyTrack.value = await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'), localStorage.getItem('playerServerType'));
+        console.log('history', historyTrack.value)
+    } catch (error) {
+        console.error('Failed to fetch radios:', error.message);
+        if (error.response && error.response.status === 401) {
+            // Handle unauthorized access
+            console.error('Unauthorized access:', error.response.data);
+        } else {
+            // Handle other errors
+            console.error('Other error:', error);
+        }
+    }
+}
+//getRadioByName();
+
 
 // Function to handle WebSocket messages
 const handleMessage = (e: MessageEvent) => {
@@ -177,121 +221,143 @@ const togglePlayback = () => {
 };
 
 
-const historyTrack = ref([]);
+
 const icecastImgUrl = ref('');
 
-const getImgTrack = async (title: string) => {
-    try {
-        const response = await axios.get(
-            "https://itunes.apple.com/search",
-            {
-                params: {
-                    term: title
-                }
-            }
-        );
-        icecastImgUrl.value = response.data.results[0].artworkUrl100;
-        getColorImg(icecastImgUrl.value)
-    } catch (error) {
-        if (axios.isAxiosError(error)) {
-            // alert('error');
-            // Axios error, check for network errors or CORS errors 12
-            if (error.response) {
-                // Server responded with a status code outside of 2xx range
-                console.error('Server responded with error status:', error.response.status);
-            } else if (error.code === 'ECONNABORTED') {
-                // Request timeout error
-                console.error('Request timeout error:', error.code);
-            } else if (error.code === 'ENETWORK') {
-                // Network error
-                console.error('Network error occurred:', error.message);
-            } else {
-                // Other Axios errors
-                console.error('Axios error occurred:', error.message);
-            }
-        } else {
-            // Non-Axios errors
-            console.error('Non-Axios error occurred:', error.message);
-        }
+// const getImgTrack = async (title: string) => {
+//     try {
+//         const response = await axios.get(
+//             "https://itunes.apple.com/search",
+//             {
+//                 params: {
+//                     term: title
+//                 }
+//             }
+//         );
+//         icecastImgUrl.value = response.data.results[0].artworkUrl100;
+//         getColorImg(icecastImgUrl.value)
+//     } catch (error) {
+//         if (axios.isAxiosError(error)) {
+//             // alert('error');
+//             // Axios error, check for network errors or CORS errors 12
+//             if (error.response) {
+//                 // Server responded with a status code outside of 2xx range
+//                 console.error('Server responded with error status:', error.response.status);
+//             } else if (error.code === 'ECONNABORTED') {
+//                 // Request timeout error
+//                 console.error('Request timeout error:', error.code);
+//             } else if (error.code === 'ENETWORK') {
+//                 // Network error
+//                 console.error('Network error occurred:', error.message);
+//             } else {
+//                 // Other Axios errors
+//                 console.error('Axios error occurred:', error.message);
+//             }
+//         } else {
+//             // Non-Axios errors
+//             console.error('Non-Axios error occurred:', error.message);
+//         }
 
-    } finally {
-        //return icecastImgUrl.value;
-    }
-};
+//     } finally {
+//         //return icecastImgUrl.value;
+//     }
+// };
 
-const currentTrack = ref([]);
+// const currentTrack = reactive({
+//     value: {
+//         img_medium_url: null
+//     }
+// });
+
+
 const currentBgColor = ref('');
 
-const fetchData = async (url: string) => {
-    try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+// watch(() => currentTrack.value, (newData, oldData) => {
+//     console.log('watch ----- ', newData, oldData)
+// }, { deep: true, immediate: true })
+// const update = () => {
+//     console.log("update")
+//     currentTrack.value = 5
+//     debugger
+// }
 
-        // const data = server_type.value !== 'shoutcast' ? await response.json() : null;
-        const data = localStorage.getItem("playerServerType") !== 'shoutcast' ? await response.json() : null;
 
-        switch (localStorage.getItem("playerServerType")) {
-            case 'icecast':
-                currentTrack.value = JSON.parse(JSON.stringify(data?.icestats.source[0], null, 2));
-                getImgTrack(JSON.stringify(data?.icestats.source.title, null, 2));
-                break;
-            case 'rcast':
-                currentTrack.value = {
-                    "title": JSON.parse(JSON.stringify(data?.nowplaying, null, 2)),
-                    "img_medium_url": JSON.parse(JSON.stringify(data?.coverart, null, 2))
-                };
+// const fetchData = async (url: string) => {
+//     try {
+//         const response = await fetch(url);
+//         if (!response.ok) {
+//             throw new Error(`HTTP error! status: ${response.status}`);
+//         }
 
-                break;
-            case 'centovacast':
-                currentTrack.value = {
-                    "title": JSON.parse(JSON.stringify(data?.data[0].track.title, null, 2)),
-                    "album": JSON.parse(JSON.stringify(data?.data[0].track.album, null, 2)),
-                    "author": JSON.parse(JSON.stringify(data?.data[0].track.artist, null, 2)),
-                    "img_medium_url": JSON.parse(JSON.stringify(data?.data[0].track.imageurl, null, 2)),
-                };
-                break;
-            case 'azuracast':
-                currentTrack.value = {
-                    "title": JSON.parse(JSON.stringify(data?.now_playing.song.title, null, 2)),
-                    "album": JSON.parse(JSON.stringify(data?.now_playing.song.album, null, 2)),
-                    "author": JSON.parse(JSON.stringify(data?.now_playing.song.artist, null, 2)),
-                    "img_medium_url": JSON.parse(JSON.stringify(data?.now_playing.song.art, null, 2)),
-                };
-                break;
-            case 'radioking':
-                currentTrack.value = {
-                    "title": JSON.parse(JSON.stringify(data[0].title, null, 2)),
-                    "album": JSON.parse(JSON.stringify(data[0].album, null, 2)),
-                    "author": JSON.parse(JSON.stringify(data[0].artist, null, 2)),
-                    "img_medium_url": JSON.parse(JSON.stringify(data[0].cover_url, null, 2)),
-                };
-                break;
-            case 'everestcast':
-                currentTrack.value = {
-                    "title": data.results[0].title,
-                    "album": data.results[0].album,
-                    "author": data.results[0].author,
-                    "img_medium_url": data.results[0].img_url,
-                };
-                // --- current track error need  
-                getImgTrack(data.results[0].title);
-                break;
+//         // const data = server_type.value !== 'shoutcast' ? await response.json() : null;
+//         const data = localStorage.getItem("playerServerType") !== 'shoutcast' ? await response.json() : null;
 
-            case 'shoutcast':
-                currentTrack.value = { "title": await response.text() };
-                console.log('shoutcast ', currentTrack.value);
-                getImgTrack(currentTrack.value.title);
-                break;
-            default:
-                break;
-        }
-        getColorImg(currentTrack.value.img_medium_url)
-    } catch (error) {
-        console.error('Fetch failed:', error);
-    }
-};
+//         switch (localStorage.getItem("playerServerType")) {
+//             case 'icecast':
+//                 currentTrack = JSON.parse(JSON.stringify(data?.icestats.source[0], null, 2));
+//                 getImgTrack(JSON.stringify(data?.icestats.source.title, null, 2));
+//                 console.log(currentTrack);
+//                 break;
+//             case 'rcast':
+//                 currentTrack = {
+//                     "title": JSON.parse(JSON.stringify(data?.nowplaying, null, 2)),
+//                     "img_medium_url": JSON.parse(JSON.stringify(data?.coverart, null, 2))
+//                 };
+//                 console.log(currentTrack);
+//                 break;
+//             case 'centovacast':
+//                 currentTrack.value = {
+//                     "title": JSON.parse(JSON.stringify(data?.data[0].track.title, null, 2)),
+//                     "album": JSON.parse(JSON.stringify(data?.data[0].track.album, null, 2)),
+//                     "author": JSON.parse(JSON.stringify(data?.data[0].track.artist, null, 2)),
+//                     "img_medium_url": JSON.parse(JSON.stringify(data?.data[0].track.imageurl, null, 2)),
+//                 };
+//                 console.log(currentTrack);
+//                 break;
+//             case 'azuracast':
+//                 currentTrack = {
+//                     "title": JSON.parse(JSON.stringify(data?.now_playing.song.title, null, 2)),
+//                     "album": JSON.parse(JSON.stringify(data?.now_playing.song.album, null, 2)),
+//                     "author": JSON.parse(JSON.stringify(data?.now_playing.song.artist, null, 2)),
+//                     "img_medium_url": JSON.parse(JSON.stringify(data?.now_playing.song.art, null, 2)),
+//                 };
+//                 console.log(currentTrack);
+//                 break;
+//             case 'radioking':
+//                 currentTrack = {
+//                     "title": JSON.parse(JSON.stringify(data[0].title, null, 2)),
+//                     "album": JSON.parse(JSON.stringify(data[0].album, null, 2)),
+//                     "author": JSON.parse(JSON.stringify(data[0].artist, null, 2)),
+//                     "img_medium_url": JSON.parse(JSON.stringify(data[0].cover_url, null, 2)),
+//                 };
+//                 console.log(currentTrack);
+//                 break;
+//             case 'everestcast':
+//                 currentTrack = {
+//                     "title": data.results[0].title,
+//                     "album": data.results[0].album,
+//                     "author": data.results[0].author,
+//                     "img_medium_url": data.results[0].img_url,
+//                 };
+//                 // --- current track error need  
+//                 getImgTrack(data.results[0].title);
+//                 console.log(currentTrack);
+//                 break;
+
+//             case 'shoutcast':
+//                 currentTrack = { "title": await response.text() };
+//                 console.log('shoutcast ', currentTrack);
+//                 getImgTrack(currentTrack.title);
+//                 console.log(currentTrack);
+//                 break;
+//             default:
+//                 break;
+//         }
+//         getColorImg(currentTrack.img_medium_url)
+//     } catch (error) {
+//         console.error('Fetch failed:', error);
+//     }
+// };
 
 
 
@@ -322,65 +388,65 @@ const getHistoryTracksMP = async (url: string) => {
 };
 
 const items = ref<any[]>([]);
-const getHistoryTracks = async (url: string) => {
-    try {
-        const response = await axios.get(url);
+// const getHistoryTracks = async (url: string) => {
+//     try {
+//         const response = await axios.get(url);
 
-        const Arritems = [
-            response.data.results,
-            response.data.items,
-            response.data,
-            response.data.song_history,
-            response.data.results
-        ];
+//         const Arritems = [
+//             response.data.results,
+//             response.data.items,
+//             response.data,
+//             response.data.song_history,
+//             response.data.results
+//         ];
 
-        for (let data of Arritems) {
-            if (Array.isArray(data)) {
-                items.value = data;
-                break; // Stop the loop once we find the first array
-            }
-        }
+//         for (let data of Arritems) {
+//             if (Array.isArray(data)) {
+//                 items.value = data;
+//                 break; // Stop the loop once we find the first array
+//             }
+//         }
 
-        // Now 'items' will be the first array found in Arritems, or undefined if no array is found
+//         // Now 'items' will be the first array found in Arritems, or undefined if no array is found
 
-        for (let data of items.value) {
-            const title = ref("");
-            const img_url = ref("");
-            switch (server_type.value) {
-                case 'shoutcast':
-                    title.value = data.title;
-                    img_url.value = data.img_url;
-                    break;
-                case 'radioking':
-                    title.value = data.title;
-                    img_url.value = data.cover_url;
-                    break;
-                case 'azuracast':
-                    title.value = data.song.title;
-                    img_url.value = data.song.art;
-                    break;
-                case 'centovacast':
-                    title.value = data.title;
-                    img_url.value = data.enclosure.url;
-                    break;
-                case 'everestcast':
-                    title.value = data.title;
-                    img_url.value = data.img_url;
-                    break;
-                case 'icecast':
-                    title.value = data.title;
-                    img_url.value = data.img_url;
-                    break;
-                default:
-                    break;
-            }
-            historyTrack.value.push({ "title": title.value, "img_url": img_url.value });
-            //console.log('historique', historyTrack.value)
-        }
-    } catch (error) {
-        console.error(error);
-    }
-};
+//         for (let data of items.value) {
+//             const title = ref("");
+//             const img_url = ref("");
+//             switch (server_type.value) {
+//                 case 'shoutcast':
+//                     title.value = data.title;
+//                     img_url.value = data.img_url;
+//                     break;
+//                 case 'radioking':
+//                     title.value = data.title;
+//                     img_url.value = data.cover_url;
+//                     break;
+//                 case 'azuracast':
+//                     title.value = data.song.title;
+//                     img_url.value = data.song.art;
+//                     break;
+//                 case 'centovacast':
+//                     title.value = data.title;
+//                     img_url.value = data.enclosure.url;
+//                     break;
+//                 case 'everestcast':
+//                     title.value = data.title;
+//                     img_url.value = data.img_url;
+//                     break;
+//                 case 'icecast':
+//                     title.value = data.title;
+//                     img_url.value = data.img_url;
+//                     break;
+//                 default:
+//                     break;
+//             }
+//             historyTrack.value.push({ "title": title.value, "img_url": img_url.value });
+//             //console.log('historique', historyTrack.value)
+//         }
+//     } catch (error) {
+//         console.error(error);
+//     }
+// };
 
 const logToServer = async (level: string, message: string) => {
     try {
@@ -390,144 +456,144 @@ const logToServer = async (level: string, message: string) => {
     }
 };
 
-const getCurrentTrack = async () => {
-    try {
-        switch (localStorage.getItem("playerServerType")) {
-            case "shoutcast":
-                // fetch the recent title 
-                //await fetchData('https://radio.pro-fhi.net:19000/currentsong?sid=1');
-                //setInterval(await fetchData(localStorage.getItem('url_server_radio')), 1000000);
+// const getCurrentTrack = async () => {
+//     try {
+//         switch (localStorage.getItem("playerServerType")) {
+//             case "shoutcast":
+//                 // fetch the recent title 
+//                 //await fetchData('https://radio.pro-fhi.net:19000/currentsong?sid=1');
+//                 //setInterval(await fetchData(localStorage.getItem('url_server_radio')), 1000000);
 
-                await fetchData(localStorage.getItem('playerUrlApi'));
-                setInterval(async () => {
-                    await fetchData(localStorage.getItem('playerUrlApi'));
-                }, 30000);
-                // fetch the historics
+//                 await fetchData(localStorage.getItem('playerUrlApi'));
+//                 setInterval(async () => {
+//                     await fetchData(localStorage.getItem('playerUrlApi'));
+//                 }, 30000);
+//                 // fetch the historics
 
-                await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'));
-                // setInterval(async () => {
-                //     await getHistoryTracks('https://ekila1.pro-fhi.net:1520/api/v2/history/?format=json&limit=5');
-                // }, 300000);
-                break;
-            case "icecast":
-                // fetch the recent title  
-                // await fetchData('https://radio13.pro-fhi.net:19008/status-json.xsl');
-                await fetchData(localStorage.getItem('playerUrlApi'));
-                setInterval(async () => {
-                    await fetchData(localStorage.getItem('playerUrlApi'));
-                }, 30000);
+//                 await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'));
+//                 // setInterval(async () => {
+//                 //     await getHistoryTracks('https://ekila1.pro-fhi.net:1520/api/v2/history/?format=json&limit=5');
+//                 // }, 300000);
+//                 break;
+//             case "icecast":
+//                 // fetch the recent title  
+//                 // await fetchData('https://radio13.pro-fhi.net:19008/status-json.xsl');
+//                 await fetchData(localStorage.getItem('playerUrlApi'));
+//                 setInterval(async () => {
+//                     await fetchData(localStorage.getItem('playerUrlApi'));
+//                 }, 30000);
 
 
-                // fetch the historics tracks 
-                await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'));
-                // setInterval(async () => {
-                //     await getHistoryTracks('https://ekila1.pro-fhi.net:1520/api/v2/history/?format=json&limit=5');
-                // }, 300000);
-                break;
-            case "everestcast":
-                // Current title
-                // await fetchData('https://ecmanager.pro-fhi.net:1030/api/v2/history/?limit=1&offset=0&format=json')
-                await fetchData(localStorage.getItem('playerUrlApi'));
-                setInterval(async () => {
-                    await fetchData(localStorage.getItem('playerUrlApi'));
-                }, 30000);
+//                 // fetch the historics tracks 
+//                 await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'));
+//                 // setInterval(async () => {
+//                 //     await getHistoryTracks('https://ekila1.pro-fhi.net:1520/api/v2/history/?format=json&limit=5');
+//                 // }, 300000);
+//                 break;
+//             case "everestcast":
+//                 // Current title
+//                 // await fetchData('https://ecmanager.pro-fhi.net:1030/api/v2/history/?limit=1&offset=0&format=json')
+//                 await fetchData(localStorage.getItem('playerUrlApi'));
+//                 setInterval(async () => {
+//                     await fetchData(localStorage.getItem('playerUrlApi'));
+//                 }, 30000);
 
-                // fetch the historics tracks 
-                await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'));
-                // setInterval(async () => {
-                //     await getHistoryTracks('https://ekila1.pro-fhi.net:1520/api/v2/history/?format=json&limit=5');
-                // }, 300000);
+//                 // fetch the historics tracks 
+//                 await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'));
+//                 // setInterval(async () => {
+//                 //     await getHistoryTracks('https://ekila1.pro-fhi.net:1520/api/v2/history/?format=json&limit=5');
+//                 // }, 300000);
 
-                break;
-            case "everestpanel":
-                // fetch the current title  
-                //await fetchData('https://evcp1.pro-fhi.net/widget/get-current-track-api?station=3');
-                await fetchData(localStorage.getItem('playerUrlApi'));
-                setInterval(async () => {
-                    await fetchData(localStorage.getItem('playerUrlApi'));
-                }, 30000);
+//                 break;
+//             case "everestpanel":
+//                 // fetch the current title  
+//                 //await fetchData('https://evcp1.pro-fhi.net/widget/get-current-track-api?station=3');
+//                 await fetchData(localStorage.getItem('playerUrlApi'));
+//                 setInterval(async () => {
+//                     await fetchData(localStorage.getItem('playerUrlApi'));
+//                 }, 30000);
 
-                // fetch the  historique not working
-                // ---- endpoint api don't working now it is just a remplacement
-                await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'));
-                // setInterval(async () => {
-                //     await getHistoryTracks('https://evcp1.pro-fhi.net/widget/get-past-tracks-api/1');
-                // }, 300000);
-                break;
+//                 // fetch the  historique not working
+//                 // ---- endpoint api don't working now it is just a remplacement
+//                 await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'));
+//                 // setInterval(async () => {
+//                 //     await getHistoryTracks('https://evcp1.pro-fhi.net/widget/get-past-tracks-api/1');
+//                 // }, 300000);
+//                 break;
 
-            case "rcast":
-                // Current title
+//             case "rcast":
+//                 // Current title
 
-                //await fetchData('https://rcast.pro-fhi.net:2020/json/stream/ekilaapiget')
-                await fetchData(localStorage.getItem('playerUrlApi'));
-                setInterval(async () => {
-                    await fetchData(localStorage.getItem('playerUrlApi'));
-                }, 30000);
+//                 //await fetchData('https://rcast.pro-fhi.net:2020/json/stream/ekilaapiget')
+//                 await fetchData(localStorage.getItem('playerUrlApi'));
+//                 setInterval(async () => {
+//                     await fetchData(localStorage.getItem('playerUrlApi'));
+//                 }, 30000);
 
-                // fetch historics of track
-                await getHistoryTracksMP(localStorage.getItem('playerUrlApiHistory'));
-                // setInterval(async () => {
-                //     await getHistoryTracksMP('https://rcast.pro-fhi.net:2020/json/stream/ekilaapiget');
-                // }, 300000);
+//                 // fetch historics of track
+//                 await getHistoryTracksMP(localStorage.getItem('playerUrlApiHistory'));
+//                 // setInterval(async () => {
+//                 //     await getHistoryTracksMP('https://rcast.pro-fhi.net:2020/json/stream/ekilaapiget');
+//                 // }, 300000);
 
-                break;
+//                 break;
 
-            case "centovacast":
-                // Current title 
+//             case "centovacast":
+//                 // Current title 
 
-                //await fetchData('https://radio.pro-fhi.net:2199/rpc/getapi/streaminfo.get')
-                await fetchData(localStorage.getItem('playerUrlApi'));
-                setInterval(async () => {
-                    await fetchData(localStorage.getItem('playerUrlApi'));
-                }, 30000);
+//                 //await fetchData('https://radio.pro-fhi.net:2199/rpc/getapi/streaminfo.get')
+//                 await fetchData(localStorage.getItem('playerUrlApi'));
+//                 setInterval(async () => {
+//                     await fetchData(localStorage.getItem('playerUrlApi'));
+//                 }, 30000);
 
-                // historisque of tracks 
-                await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'));
-                // setInterval(async () => {
-                //     await getHistoryTracks('https://radio.pro-fhi.net:2199/recentfeed/getapi/json');
-                // }, 300000);
-                break;
+//                 // historisque of tracks 
+//                 await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'));
+//                 // setInterval(async () => {
+//                 //     await getHistoryTracks('https://radio.pro-fhi.net:2199/recentfeed/getapi/json');
+//                 // }, 300000);
+//                 break;
 
-            case "azuracast":
-                // Current title 
+//             case "azuracast":
+//                 // Current title 
 
-                //await fetchData('https://demo.azuracast.com/api/nowplaying_static/azuratest_radio.json')
-                await fetchData(localStorage.getItem('playerUrlApi'));
-                setInterval(async () => {
-                    await fetchData(localStorage.getItem('playerUrlApi'));
-                }, 30000);
+//                 //await fetchData('https://demo.azuracast.com/api/nowplaying_static/azuratest_radio.json')
+//                 await fetchData(localStorage.getItem('playerUrlApi'));
+//                 setInterval(async () => {
+//                     await fetchData(localStorage.getItem('playerUrlApi'));
+//                 }, 30000);
 
-                // historisque of player
-                await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'));
-                // setInterval(async () => {
-                //     await getHistoryTracks('https://demo.azuracast.com/api/nowplaying_static/azuratest_radio.json');
-                // }, 300000);
-                break;
+//                 // historisque of player
+//                 await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'));
+//                 // setInterval(async () => {
+//                 //     await getHistoryTracks('https://demo.azuracast.com/api/nowplaying_static/azuratest_radio.json');
+//                 // }, 300000);
+//                 break;
 
-            case "radioking":
-                // Current title 
-                //await fetchData('https://api.radioking.io/widget/radio/web-radio-latinos/track/ckoi?limit=1');
-                await fetchData(localStorage.getItem('playerUrlApi'));
-                setInterval(async () => {
-                    await fetchData(localStorage.getItem('playerUrlApi'));
-                }, 30000);
+//             case "radioking":
+//                 // Current title 
+//                 //await fetchData('https://api.radioking.io/widget/radio/web-radio-latinos/track/ckoi?limit=1');
+//                 await fetchData(localStorage.getItem('playerUrlApi'));
+//                 setInterval(async () => {
+//                     await fetchData(localStorage.getItem('playerUrlApi'));
+//                 }, 30000);
 
-                // historisque of player
-                await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'));
-                // setInterval(async () => {
-                //     await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'));
-                // }, 300000);
-                break;
+//                 // historisque of player
+//                 await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'));
+//                 // setInterval(async () => {
+//                 //     await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'));
+//                 // }, 300000);
+//                 break;
 
-            default:
-            //console.log("Default case")
-        }
-    } catch (error) {
-        console.error(error);
-    } finally {
-        //console.log('end !')
-    }
-}
+//             default:
+//             //console.log("Default case")
+//         }
+//     } catch (error) {
+//         console.error(error);
+//     } finally {
+//         //console.log('end !')
+//     }
+// }
 
 const getColorImg = (source: string) => {
     const img = new Image();
@@ -554,7 +620,8 @@ const getAdvert = async () => {
     try {
         axios.get(`https://admin.radiowebapp.com/api/publicities/`, {
             headers: {
-                'Authorization': `Ekila ${localStorage.getItem("playerAccessToken")}`,
+                //'Authorization': `Ekila ${localStorage.getItem("playerAccessToken")}`,
+                'Authorization': 'Ekila eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzEzMTg5NDIwLCJpYXQiOjE3MTMxODU4MjAsImp0aSI6IjhmNDU0OTg1OGQyZDRmYTA4MzEyMDEzMTliZGRmMmJjIiwidXNlcl9pZCI6Mn0.--Y4W_d-y8kOZfakN423UcCdRZ12tNSum2Tdsnr3I9o',
                 'Content-Type': 'application/json'
             }
         }).then(response => {
@@ -623,23 +690,21 @@ const messages = ref<string[]>([]);
 // });
 
 
+
 onMounted(async () => {
     // Fetch metadata when the component is mounted
     const route = useRoute();
     //const { route_access_token, route_current_radio_id, route_url_api_radio_history, route_url_api_radio, route_url_flux_radio, route_server_type } = route.query;
-    
-    const { route_name } = route.query;
-    localStorage.setItem("radioName", route_name);
 
-    // localStorage.setItem("playerServerType", route_server_type);
-    // localStorage.setItem("playerUrlFlux", route_url_flux_radio);
-    // localStorage.setItem("playerUrlApi", route_url_api_radio);
-    // localStorage.setItem("playerUrlApiHistory", route_url_api_radio_history);
-    // localStorage.setItem("playerAccessToken", route_access_token);
-    // localStorage.setItem("playerRadioID", route_current_radio_id);
+    const { radio_name } = route.query;
+    await getRadioByName(radio_name);
+
+    if (radio_name !== undefined) {
+        localStorage.setItem("radio_name", radio_name);
+    }
 
     loading.value = true;
-    await getCurrentTrack();
+
     await getAdvert();
     setInterval(showNextAdvert, 10000);
 
@@ -682,7 +747,7 @@ onUnmounted(() => {
 
 <template>
     <div>
-
+        <!-- <div>{{ currentTrack.value }}</div> -->
         <div class="container-fluid  h-screen  bg-fixed" :style="{ 'background-color': currentBgColor || '#FF6503' }">
 
             <div class="container-fluid  max-md:hidden h-screen">
@@ -773,7 +838,7 @@ onUnmounted(() => {
             currentTrack.author }} </h4>
                             </div>
                             <hr class="my-1 h-0.5 border-t-0 bg-neutral-100 opacity-100 dark:opacity-50" />
-                            <h1 class="text-white text-left m-1"> Genre </h1>
+                            <h1 class="text-white text-left m-1"> title </h1>
 
                             {{ message }}
 
@@ -956,6 +1021,8 @@ onUnmounted(() => {
                         </div>
                     </div>
                 </div>
+
+                <button @click="update"> Click </button>
             </div>
             <div class="md:hidden container-fluid h-screen">
                 <!-- <h1> mobile </h1> -->
