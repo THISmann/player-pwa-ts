@@ -3,11 +3,14 @@
 import { fetchAndProcessRadioData } from "./fetchAndProcessRadioData";
 import { getHistoryTracks } from "./historyFetcher";
 
-export const getCurrentTrack = async (historyTrack: any, items: any ,currentTrack:any) => {
+export const getCurrentTrack = async (
+  historyTrack: any,
+  items: any,
+  currentTrack: any
+) => {
   const playerServerType = localStorage.getItem("playerServerType");
   const playerUrlApi = localStorage.getItem("playerUrlApi");
   const playerUrlApiHistory = localStorage.getItem("playerUrlApiHistory");
- 
 
   try {
     if (!playerServerType || !playerUrlApi || !playerUrlApiHistory) {
@@ -15,12 +18,12 @@ export const getCurrentTrack = async (historyTrack: any, items: any ,currentTrac
       return;
     }
 
-    const fetchDataAndSetInterval = async () => {
-      await fetchAndProcessRadioData(playerUrlApi);
-      setInterval(async () => {
-        await fetchAndProcessRadioData(playerUrlApi );
-      }, 30000);
-    };
+    // const fetchDataAndSetInterval = async () => {
+    //   await fetchAndProcessRadioData(playerUrlApi);
+    //   setInterval(async () => {
+    //     await fetchAndProcessRadioData(playerUrlApi);
+    //   }, 30000);
+    // };
 
     switch (playerServerType) {
       case "shoutcast":
@@ -31,11 +34,8 @@ export const getCurrentTrack = async (historyTrack: any, items: any ,currentTrac
       case "centovacast":
       case "azuracast":
       case "radioking":
-        await fetchDataAndSetInterval();
-        await getHistoryTracks(
-          playerUrlApiHistory,
-          playerServerType
-        );
+        await fetchAndProcessRadioData(playerUrlApi);
+        await getHistoryTracks(playerUrlApiHistory, playerServerType);
         break;
       default:
         console.error("Invalid player server type");

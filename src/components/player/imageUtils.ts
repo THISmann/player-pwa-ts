@@ -3,9 +3,7 @@
 import axios from "axios";
 import themeColor from "./colorExtraction";
 
-export const getImgTrack = async (
-  title: string
-) => {
+export const getImgTrack = async (title: string) => {
   try {
     const response = await axios.get("https://itunes.apple.com/search", {
       params: {
@@ -15,7 +13,6 @@ export const getImgTrack = async (
     return response.data.results[0].artworkUrl100;
     //getColorImg(icecastImgUrl);
   } catch (error) {
-    
     if (axios.isAxiosError(error)) {
       // Axios error handling
     } else {
@@ -26,23 +23,23 @@ export const getImgTrack = async (
   }
 };
 
-const SetColor = (
-  colorArr: number[][]
-) => {
+ 
+const SetColor = (colorArr: number[][]) => {
   const bgc = `rgb(${Math.floor(colorArr[0][0])},${Math.floor(
     colorArr[0][1]
-  )},${Math.floor(colorArr[0][2])})`;
-  // currentBgColor = bgc;
+  )},${Math.floor(colorArr[0][2])})`; 
   return bgc;
 };
 
-export const getColorImg = (source: string) => {
+export const getColorImg = (source: string, callback: (bgc: string) => void) => {
   const img = new Image();
   img.src = source;
   img.crossOrigin = "anonymous";
   img.onload = () => {
-    themeColor(100, img, 40, SetColor);
+    themeColor(100, img, 40, (colorArr) => {
+      const bgc = SetColor(colorArr);
+      callback(bgc);
+    });
+  }; 
 };
-};
-
 

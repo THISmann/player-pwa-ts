@@ -12,16 +12,16 @@ import { useRoute } from 'vue-router';
 import InstallButton from './installButton.vue'
 const chatSocket = ref<WebSocket | null>(null);
 const publicitySocket = ref<WebSocket | null>(null);
-import { getCurrentTrack } from './currentTrackFetcher'
 import { fetchAndProcessRadioData } from './fetchAndProcessRadioData'
 import { getHistoryTracks } from './historyFetcher'
-
+import { getImgTrack } from './imageUtils'
 // Initialize currentTrack as a reactive object
 
 
 
 const currentTrack = ref([]);
 const historyTrack = ref([]);
+const icecastImgUrl = ref('');
 
 const getRadioByName = async (radioName: string) => {
     try {
@@ -33,7 +33,7 @@ const getRadioByName = async (radioName: string) => {
         const response = await axios.get(`http://localhost:8030/api/radios/${radioName}`, {
             headers: {
                 //'Authorization': `Ekila ${localStorage.getItem("access-token")}`
-                'Authorization': 'Ekila eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzEzMTg5NDIwLCJpYXQiOjE3MTMxODU4MjAsImp0aSI6IjhmNDU0OTg1OGQyZDRmYTA4MzEyMDEzMTliZGRmMmJjIiwidXNlcl9pZCI6Mn0.--Y4W_d-y8kOZfakN423UcCdRZ12tNSum2Tdsnr3I9o'
+                'Authorization': 'Ekila eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzEzMjc2NDE4LCJpYXQiOjE3MTMyNzI4MTgsImp0aSI6IjA3N2JlMDVlNDNkZDRkOGZiYjNlYzA4NTU0OWNkNDViIiwidXNlcl9pZCI6Mn0.XzHSMb0_0vCbW8sj-62deUUS-kUj3eH_kVqPZvWjKZI'
             }
         });
 
@@ -47,10 +47,14 @@ const getRadioByName = async (radioName: string) => {
             localStorage.setItem("playerUrlApiHistory", responseData.url_api_radio_history);
             localStorage.setItem("playerAccessToken", responseData.access_token);
             localStorage.setItem("playerRadioID", responseData.id);
-        } 
-        
-        currentTrack.value = await fetchAndProcessRadioData(localStorage.getItem('playerUrlApi'));
-        historyTrack.value = await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'), localStorage.getItem('playerServerType'));
+        }
+
+        // Call updateBackgroundColor immediately
+        updateMetadata();
+
+        // Update every 2 minutes
+        setInterval(updateMetadata, 2 * 60 * 1000); // 2 minutes in milliseconds
+
         console.log('history', historyTrack.value)
     } catch (error) {
         console.error('Failed to fetch radios:', error.message);
@@ -63,7 +67,35 @@ const getRadioByName = async (radioName: string) => {
         }
     }
 }
-//getRadioByName();
+
+const updateMetadata = async () => {
+    switch (localStorage.getItem("playerServerType")) {
+        case 'icecast':
+        case 'shoutcast':
+            currentTrack.value = await fetchAndProcessRadioData(localStorage.getItem('playerUrlApi'));
+            icecastImgUrl.value = await getImgTrack(currentTrack.value.title);
+            getColorImg(icecastImgUrl.value, (bgColor) => {
+                console.log("Background color:", bgColor);
+            });
+            break;
+        case 'rcast':
+        case 'centovacast':
+        case 'azuracast':
+        case 'radioking':
+        case 'everestcast':
+            currentTrack.value = await fetchAndProcessRadioData(localStorage.getItem('playerUrlApi'));
+            getColorImg(currentTrack.value.img_medium_url, (bgColor) => {
+                console.log("Background color:", bgColor);
+            });
+            historyTrack.value = await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'), localStorage.getItem('playerServerType'));
+            break;
+    }
+};
+
+// setInterval(async () => {
+//     await updateMetadata();
+// }, 3000);
+
 
 
 // Function to handle WebSocket messages
@@ -220,233 +252,9 @@ const togglePlayback = () => {
     isPlaying.value = shouldPlay;
 };
 
-
-
-const icecastImgUrl = ref('');
-
-// const getImgTrack = async (title: string) => {
-//     try {
-//         const response = await axios.get(
-//             "https://itunes.apple.com/search",
-//             {
-//                 params: {
-//                     term: title
-//                 }
-//             }
-//         );
-//         icecastImgUrl.value = response.data.results[0].artworkUrl100;
-//         getColorImg(icecastImgUrl.value)
-//     } catch (error) {
-//         if (axios.isAxiosError(error)) {
-//             // alert('error');
-//             // Axios error, check for network errors or CORS errors 12
-//             if (error.response) {
-//                 // Server responded with a status code outside of 2xx range
-//                 console.error('Server responded with error status:', error.response.status);
-//             } else if (error.code === 'ECONNABORTED') {
-//                 // Request timeout error
-//                 console.error('Request timeout error:', error.code);
-//             } else if (error.code === 'ENETWORK') {
-//                 // Network error
-//                 console.error('Network error occurred:', error.message);
-//             } else {
-//                 // Other Axios errors
-//                 console.error('Axios error occurred:', error.message);
-//             }
-//         } else {
-//             // Non-Axios errors
-//             console.error('Non-Axios error occurred:', error.message);
-//         }
-
-//     } finally {
-//         //return icecastImgUrl.value;
-//     }
-// };
-
-// const currentTrack = reactive({
-//     value: {
-//         img_medium_url: null
-//     }
-// });
-
-
 const currentBgColor = ref('');
 
-// watch(() => currentTrack.value, (newData, oldData) => {
-//     console.log('watch ----- ', newData, oldData)
-// }, { deep: true, immediate: true })
-// const update = () => {
-//     console.log("update")
-//     currentTrack.value = 5
-//     debugger
-// }
 
-
-// const fetchData = async (url: string) => {
-//     try {
-//         const response = await fetch(url);
-//         if (!response.ok) {
-//             throw new Error(`HTTP error! status: ${response.status}`);
-//         }
-
-//         // const data = server_type.value !== 'shoutcast' ? await response.json() : null;
-//         const data = localStorage.getItem("playerServerType") !== 'shoutcast' ? await response.json() : null;
-
-//         switch (localStorage.getItem("playerServerType")) {
-//             case 'icecast':
-//                 currentTrack = JSON.parse(JSON.stringify(data?.icestats.source[0], null, 2));
-//                 getImgTrack(JSON.stringify(data?.icestats.source.title, null, 2));
-//                 console.log(currentTrack);
-//                 break;
-//             case 'rcast':
-//                 currentTrack = {
-//                     "title": JSON.parse(JSON.stringify(data?.nowplaying, null, 2)),
-//                     "img_medium_url": JSON.parse(JSON.stringify(data?.coverart, null, 2))
-//                 };
-//                 console.log(currentTrack);
-//                 break;
-//             case 'centovacast':
-//                 currentTrack.value = {
-//                     "title": JSON.parse(JSON.stringify(data?.data[0].track.title, null, 2)),
-//                     "album": JSON.parse(JSON.stringify(data?.data[0].track.album, null, 2)),
-//                     "author": JSON.parse(JSON.stringify(data?.data[0].track.artist, null, 2)),
-//                     "img_medium_url": JSON.parse(JSON.stringify(data?.data[0].track.imageurl, null, 2)),
-//                 };
-//                 console.log(currentTrack);
-//                 break;
-//             case 'azuracast':
-//                 currentTrack = {
-//                     "title": JSON.parse(JSON.stringify(data?.now_playing.song.title, null, 2)),
-//                     "album": JSON.parse(JSON.stringify(data?.now_playing.song.album, null, 2)),
-//                     "author": JSON.parse(JSON.stringify(data?.now_playing.song.artist, null, 2)),
-//                     "img_medium_url": JSON.parse(JSON.stringify(data?.now_playing.song.art, null, 2)),
-//                 };
-//                 console.log(currentTrack);
-//                 break;
-//             case 'radioking':
-//                 currentTrack = {
-//                     "title": JSON.parse(JSON.stringify(data[0].title, null, 2)),
-//                     "album": JSON.parse(JSON.stringify(data[0].album, null, 2)),
-//                     "author": JSON.parse(JSON.stringify(data[0].artist, null, 2)),
-//                     "img_medium_url": JSON.parse(JSON.stringify(data[0].cover_url, null, 2)),
-//                 };
-//                 console.log(currentTrack);
-//                 break;
-//             case 'everestcast':
-//                 currentTrack = {
-//                     "title": data.results[0].title,
-//                     "album": data.results[0].album,
-//                     "author": data.results[0].author,
-//                     "img_medium_url": data.results[0].img_url,
-//                 };
-//                 // --- current track error need  
-//                 getImgTrack(data.results[0].title);
-//                 console.log(currentTrack);
-//                 break;
-
-//             case 'shoutcast':
-//                 currentTrack = { "title": await response.text() };
-//                 console.log('shoutcast ', currentTrack);
-//                 getImgTrack(currentTrack.title);
-//                 console.log(currentTrack);
-//                 break;
-//             default:
-//                 break;
-//         }
-//         getColorImg(currentTrack.img_medium_url)
-//     } catch (error) {
-//         console.error('Fetch failed:', error);
-//     }
-// };
-
-
-
-const getHistoryTracksMP = async (url: string) => {
-    try {
-        const response = await axios.get(url);
-
-        const { trackhistory, covers } = response.data;
-
-        // Ensure both arrays have the same length
-        const minLength = Math.min(trackhistory.length, covers.length);
-
-        // Iterate over both arrays simultaneously
-        for (let i = 0; i < minLength; i++) {
-            const data1 = trackhistory[i];
-            const data2 = covers[i];
-
-            historyTrack.value.push({
-                title: data1,
-                img_url: data2
-            });
-        }
-    } catch (error) {
-        console.error(error);
-    } finally {
-        //console.log('end everest_Cast')
-    }
-};
-
-const items = ref<any[]>([]);
-// const getHistoryTracks = async (url: string) => {
-//     try {
-//         const response = await axios.get(url);
-
-//         const Arritems = [
-//             response.data.results,
-//             response.data.items,
-//             response.data,
-//             response.data.song_history,
-//             response.data.results
-//         ];
-
-//         for (let data of Arritems) {
-//             if (Array.isArray(data)) {
-//                 items.value = data;
-//                 break; // Stop the loop once we find the first array
-//             }
-//         }
-
-//         // Now 'items' will be the first array found in Arritems, or undefined if no array is found
-
-//         for (let data of items.value) {
-//             const title = ref("");
-//             const img_url = ref("");
-//             switch (server_type.value) {
-//                 case 'shoutcast':
-//                     title.value = data.title;
-//                     img_url.value = data.img_url;
-//                     break;
-//                 case 'radioking':
-//                     title.value = data.title;
-//                     img_url.value = data.cover_url;
-//                     break;
-//                 case 'azuracast':
-//                     title.value = data.song.title;
-//                     img_url.value = data.song.art;
-//                     break;
-//                 case 'centovacast':
-//                     title.value = data.title;
-//                     img_url.value = data.enclosure.url;
-//                     break;
-//                 case 'everestcast':
-//                     title.value = data.title;
-//                     img_url.value = data.img_url;
-//                     break;
-//                 case 'icecast':
-//                     title.value = data.title;
-//                     img_url.value = data.img_url;
-//                     break;
-//                 default:
-//                     break;
-//             }
-//             historyTrack.value.push({ "title": title.value, "img_url": img_url.value });
-//             //console.log('historique', historyTrack.value)
-//         }
-//     } catch (error) {
-//         console.error(error);
-//     }
-// };
 
 const logToServer = async (level: string, message: string) => {
     try {
@@ -456,144 +264,6 @@ const logToServer = async (level: string, message: string) => {
     }
 };
 
-// const getCurrentTrack = async () => {
-//     try {
-//         switch (localStorage.getItem("playerServerType")) {
-//             case "shoutcast":
-//                 // fetch the recent title 
-//                 //await fetchData('https://radio.pro-fhi.net:19000/currentsong?sid=1');
-//                 //setInterval(await fetchData(localStorage.getItem('url_server_radio')), 1000000);
-
-//                 await fetchData(localStorage.getItem('playerUrlApi'));
-//                 setInterval(async () => {
-//                     await fetchData(localStorage.getItem('playerUrlApi'));
-//                 }, 30000);
-//                 // fetch the historics
-
-//                 await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'));
-//                 // setInterval(async () => {
-//                 //     await getHistoryTracks('https://ekila1.pro-fhi.net:1520/api/v2/history/?format=json&limit=5');
-//                 // }, 300000);
-//                 break;
-//             case "icecast":
-//                 // fetch the recent title  
-//                 // await fetchData('https://radio13.pro-fhi.net:19008/status-json.xsl');
-//                 await fetchData(localStorage.getItem('playerUrlApi'));
-//                 setInterval(async () => {
-//                     await fetchData(localStorage.getItem('playerUrlApi'));
-//                 }, 30000);
-
-
-//                 // fetch the historics tracks 
-//                 await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'));
-//                 // setInterval(async () => {
-//                 //     await getHistoryTracks('https://ekila1.pro-fhi.net:1520/api/v2/history/?format=json&limit=5');
-//                 // }, 300000);
-//                 break;
-//             case "everestcast":
-//                 // Current title
-//                 // await fetchData('https://ecmanager.pro-fhi.net:1030/api/v2/history/?limit=1&offset=0&format=json')
-//                 await fetchData(localStorage.getItem('playerUrlApi'));
-//                 setInterval(async () => {
-//                     await fetchData(localStorage.getItem('playerUrlApi'));
-//                 }, 30000);
-
-//                 // fetch the historics tracks 
-//                 await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'));
-//                 // setInterval(async () => {
-//                 //     await getHistoryTracks('https://ekila1.pro-fhi.net:1520/api/v2/history/?format=json&limit=5');
-//                 // }, 300000);
-
-//                 break;
-//             case "everestpanel":
-//                 // fetch the current title  
-//                 //await fetchData('https://evcp1.pro-fhi.net/widget/get-current-track-api?station=3');
-//                 await fetchData(localStorage.getItem('playerUrlApi'));
-//                 setInterval(async () => {
-//                     await fetchData(localStorage.getItem('playerUrlApi'));
-//                 }, 30000);
-
-//                 // fetch the  historique not working
-//                 // ---- endpoint api don't working now it is just a remplacement
-//                 await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'));
-//                 // setInterval(async () => {
-//                 //     await getHistoryTracks('https://evcp1.pro-fhi.net/widget/get-past-tracks-api/1');
-//                 // }, 300000);
-//                 break;
-
-//             case "rcast":
-//                 // Current title
-
-//                 //await fetchData('https://rcast.pro-fhi.net:2020/json/stream/ekilaapiget')
-//                 await fetchData(localStorage.getItem('playerUrlApi'));
-//                 setInterval(async () => {
-//                     await fetchData(localStorage.getItem('playerUrlApi'));
-//                 }, 30000);
-
-//                 // fetch historics of track
-//                 await getHistoryTracksMP(localStorage.getItem('playerUrlApiHistory'));
-//                 // setInterval(async () => {
-//                 //     await getHistoryTracksMP('https://rcast.pro-fhi.net:2020/json/stream/ekilaapiget');
-//                 // }, 300000);
-
-//                 break;
-
-//             case "centovacast":
-//                 // Current title 
-
-//                 //await fetchData('https://radio.pro-fhi.net:2199/rpc/getapi/streaminfo.get')
-//                 await fetchData(localStorage.getItem('playerUrlApi'));
-//                 setInterval(async () => {
-//                     await fetchData(localStorage.getItem('playerUrlApi'));
-//                 }, 30000);
-
-//                 // historisque of tracks 
-//                 await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'));
-//                 // setInterval(async () => {
-//                 //     await getHistoryTracks('https://radio.pro-fhi.net:2199/recentfeed/getapi/json');
-//                 // }, 300000);
-//                 break;
-
-//             case "azuracast":
-//                 // Current title 
-
-//                 //await fetchData('https://demo.azuracast.com/api/nowplaying_static/azuratest_radio.json')
-//                 await fetchData(localStorage.getItem('playerUrlApi'));
-//                 setInterval(async () => {
-//                     await fetchData(localStorage.getItem('playerUrlApi'));
-//                 }, 30000);
-
-//                 // historisque of player
-//                 await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'));
-//                 // setInterval(async () => {
-//                 //     await getHistoryTracks('https://demo.azuracast.com/api/nowplaying_static/azuratest_radio.json');
-//                 // }, 300000);
-//                 break;
-
-//             case "radioking":
-//                 // Current title 
-//                 //await fetchData('https://api.radioking.io/widget/radio/web-radio-latinos/track/ckoi?limit=1');
-//                 await fetchData(localStorage.getItem('playerUrlApi'));
-//                 setInterval(async () => {
-//                     await fetchData(localStorage.getItem('playerUrlApi'));
-//                 }, 30000);
-
-//                 // historisque of player
-//                 await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'));
-//                 // setInterval(async () => {
-//                 //     await getHistoryTracks(localStorage.getItem('playerUrlApiHistory'));
-//                 // }, 300000);
-//                 break;
-
-//             default:
-//             //console.log("Default case")
-//         }
-//     } catch (error) {
-//         console.error(error);
-//     } finally {
-//         //console.log('end !')
-//     }
-// }
 
 const getColorImg = (source: string) => {
     const img = new Image();
@@ -621,7 +291,7 @@ const getAdvert = async () => {
         axios.get(`https://admin.radiowebapp.com/api/publicities/`, {
             headers: {
                 //'Authorization': `Ekila ${localStorage.getItem("playerAccessToken")}`,
-                'Authorization': 'Ekila eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzEzMTg5NDIwLCJpYXQiOjE3MTMxODU4MjAsImp0aSI6IjhmNDU0OTg1OGQyZDRmYTA4MzEyMDEzMTliZGRmMmJjIiwidXNlcl9pZCI6Mn0.--Y4W_d-y8kOZfakN423UcCdRZ12tNSum2Tdsnr3I9o',
+                'Authorization': 'Ekila eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzEzMjc2NDE4LCJpYXQiOjE3MTMyNzI4MTgsImp0aSI6IjA3N2JlMDVlNDNkZDRkOGZiYjNlYzA4NTU0OWNkNDViIiwidXNlcl9pZCI6Mn0.XzHSMb0_0vCbW8sj-62deUUS-kUj3eH_kVqPZvWjKZI',
                 'Content-Type': 'application/json'
             }
         }).then(response => {
@@ -660,34 +330,6 @@ const SetColor = (colorArr: number[][]): string => {
 const message = ref('');
 const loading = ref(true);
 const messages = ref<string[]>([]);
-
-// socket.on('connect', () => {
-//     console.log('Connecté au serveur Socket.IO');
-//     logToServer('info', 'Connecté au serveur Socket.IO');
-// });
-
-// socket.on('radio-info-player', (data: object) => {
-//     console.log('Message du serveur:', data);
-// localStorage.setItem("playerServerType", data.server_type);
-// localStorage.setItem("playerUrlFlux", data.url_flux_radio);
-// localStorage.setItem("playerUrlServer", data.url_server_radio);
-// localStorage.setItem("playerUrlApi", data.url_api_radio);
-// localStorage.setItem("playerUrlSite", data.url_site);
-// localStorage.setItem("playerUrlCover", data.url_site);
-// });
-
-// socket.on('metadata', (msg: string) => {
-//     console.log('Message du serveur:', msg);
-//     message.value = msg;
-// });
-
-// watch(message, (newValue, oldValue) => {
-//     console.log('Messages have changed:', newValue);
-//     console.log('old message :', oldValue);
-//     getImgTrack(newValue);
-//     loading.value = false;
-//     //message.value = newValue;
-// });
 
 
 
@@ -748,7 +390,7 @@ onUnmounted(() => {
 <template>
     <div>
         <!-- <div>{{ currentTrack.value }}</div> -->
-        <div class="container-fluid  h-screen  bg-fixed" :style="{ 'background-color': currentBgColor || '#FF6503' }">
+        <div class="container-fluid  h-screen  bg-fixed m-0 p-0 containerRadio" :style="{ 'background-color': currentBgColor || '#FF6503' }">
 
             <div class="container-fluid  max-md:hidden h-screen">
                 <ModalsContainer />
@@ -768,13 +410,15 @@ onUnmounted(() => {
                         <div id="cards-section" class="">
 
 
-                            <div class="flex p-1 mx-7">
+                            <div class="p-1 mx-7 flex overflow-x-scroll hide-scrollbar">
                                 <div v-for="data in historyTrack" :key="data.id"
                                     class="w-48 h-64 border-black-300/75 rounded-lg shadow-2xl px-4 m-1">
                                     <img :src="data.img_url" class="rounded-lg h-40" alt="" srcset="">
                                     <h1
-                                        class="text-left mx-1 text-md text-gray-100 bg-gray-500/25 p-1 mt-1 rounded-lg ">
-                                        {{ data.title }} </h1>
+                                        class="text-left mx-1 text-md text-gray-100 bg-gray-500/25 p-1 mt-1 rounded-lg md:h-14 overflow-hidden overflow-ellipsis whitespace-nowrap">
+                                        {{ data.title }}
+                                    </h1>
+
                                 </div>
                             </div>
 
@@ -789,28 +433,15 @@ onUnmounted(() => {
                                 class="w-full h-32 rounded-lg">
                             <img :src="currentTrack.img_medium_url || img"
                                 v-if="server_type === 'everestcast' || server_type === 'rcast' || server_type === 'centovacast' || server_type === 'radioking' || server_type === 'azuracast'"
-                                alt="" class="w-full h-32 rounded-lg">
-                            <!-- <img :src="currentTrack.imageurl || img" v-if="server_type === 'centovacast'" alt=""
-                            class="w-full h-32 rounded-lg"> -->
+                                alt="" class="w-full h-32 rounded-lg"> 
                         </div>
                         <div class="p-3">
                             <hr class="my-1 h-0.5 border-t-0 bg-neutral-100 opacity-100 dark:opacity-50" />
-                            <h1 class="text-white text-left m-1"> Title</h1>
+                            <h1 class="text-white text-left m-1"> Titre</h1>
 
                             <div v-for="serverType in serverTypes" :key="serverType">
                                 <h4 v-if="server_type === '' || server_type === serverType"
-                                    class="text-white text-left m-1">
-                                    <!-- <span v-if="loading"><svg aria-hidden="true" role="status"
-                                        class="inline w-4 h-4 me-3 text-white animate-spin" viewBox="0 0 100 101"
-                                        fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path
-                                            d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
-                                            fill="#E5E7EB" />
-                                        <path
-                                            d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
-                                            fill="currentColor" />
-                                    </svg>
-                                    chargement ... </span> -->
+                                    class="text-white text-left m-1"> 
                                     {{ currentTrack.title }}
                                 </h4>
 
@@ -828,7 +459,7 @@ onUnmounted(() => {
                             </div>
 
                             <hr class="my-1 h-0.5 border-t-0 bg-neutral-100 opacity-100 dark:opacity-50" />
-                            <h1 class="text-white text-left m-1"> Author </h1>
+                            <h1 class="text-white text-left m-1"> Auteur </h1>
                             <div v-for="serverType in serverTypes" :key="serverType">
                                 <h4 v-if="server_type === '' || server_type === serverType && serverType === 'icecast'"
                                     class="text-white text-left m-1"> {{
@@ -838,9 +469,9 @@ onUnmounted(() => {
             currentTrack.author }} </h4>
                             </div>
                             <hr class="my-1 h-0.5 border-t-0 bg-neutral-100 opacity-100 dark:opacity-50" />
-                            <h1 class="text-white text-left m-1"> title </h1>
+                            <h1 class="text-white text-left m-1"> description </h1>
 
-                            {{ message }}
+
 
                             <div v-for="serverType in serverTypes" :key="serverType">
                                 <h4 v-if="server_type === '' || server_type === serverType && serverType === 'icecast'"
@@ -869,15 +500,14 @@ onUnmounted(() => {
                     <div class="col-span-3" id="audioMetaD">
                         <div class="flex p-1">
                             <div id="cardPlayer" class="p-1 m-1 bg-gray-200 rounded-lg">
-                                <div>
-
-                                    <img :src="icecastImgUrl || img" v-if="server_type === 'icecast'" class="w-32 h-24"
+                                <div> 
+                                    <img :src="icecastImgUrl || img" v-if="server_type === 'icecast'" class="max-md:w-48 max-md:h-28"
                                         alt="" srcset="">
                                     <img :src="icecastImgUrl || img" v-if="server_type === 'shoutcast'"
-                                        class="w-32 h-24" alt="" srcset="">
+                                        class="max-md:w-48 max-md:h-28" alt="" srcset="">
                                     <img :src="currentTrack.img_medium_url || img"
                                         v-if="server_type === 'everestcast' || server_type === 'rcast' || server_type === 'centovacast' || server_type === 'radioking' || server_type === 'azuracast'"
-                                        class="w-32 h-24" alt="" srcset="">
+                                        class="max-md:w-14 md:w-20 md:h-20 max-md:h-14" alt="" srcset="">
                                 </div>
                             </div>
                             <div class="p-4">
@@ -1022,7 +652,7 @@ onUnmounted(() => {
                     </div>
                 </div>
 
-                <button @click="update"> Click </button>
+                <!-- <button @click="update"> Click </button> -->
             </div>
             <div class="md:hidden container-fluid h-screen">
                 <!-- <h1> mobile </h1> -->
@@ -1043,7 +673,7 @@ onUnmounted(() => {
                         <h1 class="mt-4 text-white text-left text-sm bg-gray-400 m-1 p-1"> {{ currentTrack.title }}
                         </h1>
 
-                        <span><svg aria-hidden="true" role="status" class="inline w-4 h-4 me-3 text-white animate-spin"
+                        <!-- <span><svg aria-hidden="true" role="status" class="inline w-4 h-4 me-3 text-white animate-spin"
                                 viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path
                                     d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
@@ -1052,7 +682,7 @@ onUnmounted(() => {
                                     d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
                                     fill="currentColor" />
                             </svg>
-                            chargement ... </span>
+                            chargement ... </span> -->
                         <h1 class="mt-4 text-white text-left text-sm"> {{ message }} </h1>
                     </div>
                 </div>
@@ -1137,4 +767,17 @@ onUnmounted(() => {
     </div>
 </template>
 
-<style></style>
+<style>
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+.containerRadio {
+    width: 100%;
+    height: 100%; 
+    background-size: cover;
+    background-position: center; 
+}
+</style>
