@@ -29,8 +29,6 @@ export const fetchAndProcessRadioData = async (url: string) => {
                     "author": JSON.parse(JSON.stringify(data?.data[0].track.artist, null, 2)),
                     "img_medium_url": JSON.parse(JSON.stringify(data?.data[0].track.imageurl, null, 2)),
                 };
-                //getImgTrack(data.results[0].track.title);
-               // console.log('++++++', typeof(currentTrack));
                 break;
             case 'azuracast':
                 currentTrack = {
@@ -47,8 +45,7 @@ export const fetchAndProcessRadioData = async (url: string) => {
                     "album": JSON.parse(JSON.stringify(data[0].album, null, 2)),
                     "author": JSON.parse(JSON.stringify(data[0].artist, null, 2)),
                     "img_medium_url": JSON.parse(JSON.stringify(data[0].cover_url, null, 2)),
-                };
-                // console.log('++++++', currentTrack);
+                }; 
                 break;
             case 'everestcast':
                 currentTrack = {
@@ -56,16 +53,11 @@ export const fetchAndProcessRadioData = async (url: string) => {
                     "album": data.results[0].album,
                     "author": data.results[0].author,
                     "img_medium_url": data.results[0].img_url,
-                };
-                getImgTrack(data.results[0].title);
-                // console.log('++++++', currentTrack);
+                }; 
                 break;
 
             case 'shoutcast':
-                currentTrack = { "title": await response.text() };
-                console.log('shoutcast ', currentTrack);
-                getImgTrack(currentTrack.title);
-                // console.log('++++++', currentTrack);
+                currentTrack = { "title": await response.text() }; 
                 break;
             default:
                 break;

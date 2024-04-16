@@ -22,6 +22,7 @@ import { getImgTrack } from './imageUtils'
 const currentTrack = ref([]);
 const historyTrack = ref([]);
 const icecastImgUrl = ref('');
+console.log('+++', currentTrack, historyTrack);
 
 const getRadioByName = async (radioName: string) => {
     try {
@@ -33,7 +34,7 @@ const getRadioByName = async (radioName: string) => {
         const response = await axios.get(`http://localhost:8030/api/radios/${radioName}`, {
             headers: {
                 //'Authorization': `Ekila ${localStorage.getItem("access-token")}`
-                'Authorization': 'Ekila eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzEzMjc2NDE4LCJpYXQiOjE3MTMyNzI4MTgsImp0aSI6IjA3N2JlMDVlNDNkZDRkOGZiYjNlYzA4NTU0OWNkNDViIiwidXNlcl9pZCI6Mn0.XzHSMb0_0vCbW8sj-62deUUS-kUj3eH_kVqPZvWjKZI'
+                'Authorization': 'Ekila eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzEzMjgwMTAyLCJpYXQiOjE3MTMyNzY1MDIsImp0aSI6IjJhZTE1ODAyZGJiNTQxZDM5NGNhYmMyNjA3ZWU2ZThjIiwidXNlcl9pZCI6Mn0.aNVuLfNuEoPeChZjoWAkje0oP5_N1yXXCF4zZSOdLGI'
             }
         });
 
@@ -291,7 +292,7 @@ const getAdvert = async () => {
         axios.get(`https://admin.radiowebapp.com/api/publicities/`, {
             headers: {
                 //'Authorization': `Ekila ${localStorage.getItem("playerAccessToken")}`,
-                'Authorization': 'Ekila eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzEzMjc2NDE4LCJpYXQiOjE3MTMyNzI4MTgsImp0aSI6IjA3N2JlMDVlNDNkZDRkOGZiYjNlYzA4NTU0OWNkNDViIiwidXNlcl9pZCI6Mn0.XzHSMb0_0vCbW8sj-62deUUS-kUj3eH_kVqPZvWjKZI',
+                'Authorization': 'Ekila eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzEzMjgwMTAyLCJpYXQiOjE3MTMyNzY1MDIsImp0aSI6IjJhZTE1ODAyZGJiNTQxZDM5NGNhYmMyNjA3ZWU2ZThjIiwidXNlcl9pZCI6Mn0.aNVuLfNuEoPeChZjoWAkje0oP5_N1yXXCF4zZSOdLGI',
                 'Content-Type': 'application/json'
             }
         }).then(response => {
@@ -389,8 +390,8 @@ onUnmounted(() => {
 
 <template>
     <div>
-        <!-- <div>{{ currentTrack.value }}</div> -->
-        <div class="container-fluid  h-screen  bg-fixed m-0 p-0 containerRadio" :style="{ 'background-color': currentBgColor || '#FF6503' }">
+        <div class="container-fluid  h-screen  bg-fixed m-0 p-0 containerRadio"
+            :style="{ 'background-color': currentBgColor || '#FF6503' }">
 
             <div class="container-fluid  max-md:hidden h-screen">
                 <ModalsContainer />
@@ -426,22 +427,24 @@ onUnmounted(() => {
                         </div>
                     </div>
                     <div class="col-span-3 bg-slate-100/25 rounded-lg m-1">
+
                         <div class="m-6 p-1 rounded-lg bg-gray-200">
-                            <img :src="icecastImgUrl || img" v-if="server_type === 'icecast'" alt=""
+                            <!-- <img :src="icecastImgUrl || img" v-if="server_type === 'icecast'" alt=""
                                 class="w-full h-32 rounded-lg">
                             <img :src="icecastImgUrl || img" v-if="server_type === 'shoutcast'" alt=""
                                 class="w-full h-32 rounded-lg">
                             <img :src="currentTrack.img_medium_url || img"
                                 v-if="server_type === 'everestcast' || server_type === 'rcast' || server_type === 'centovacast' || server_type === 'radioking' || server_type === 'azuracast'"
-                                alt="" class="w-full h-32 rounded-lg"> 
+                                alt="" class="w-full h-32 rounded-lg"> -->
+                            <img :src="currentTrack.img_medium_url || img || icecastImgUrl" alt=""
+                                class="w-full h-32 rounded-lg">
                         </div>
                         <div class="p-3">
                             <hr class="my-1 h-0.5 border-t-0 bg-neutral-100 opacity-100 dark:opacity-50" />
                             <h1 class="text-white text-left m-1"> Titre</h1>
 
-                            <div v-for="serverType in serverTypes" :key="serverType">
-                                <h4 v-if="server_type === '' || server_type === serverType"
-                                    class="text-white text-left m-1"> 
+                            <div>
+                                <h4 class="text-white text-left m-1">
                                     {{ currentTrack.title }}
                                 </h4>
 
@@ -449,23 +452,16 @@ onUnmounted(() => {
 
                             <hr class="my-1 h-0.5 border-t-0 bg-neutral-100 opacity-100 dark:opacity-50" />
                             <h1 class="text-white text-left m-1 bg-gray-600 p-1 rounded-lg "> Album</h1>
-                            <div v-for="serverType in serverTypes" :key="serverType">
-                                <h4 v-if="server_type === '' || server_type === serverType && serverType === 'icecast'"
-                                    class="text-white text-left m-1">{{ currentTrack.server_description }}</h4>
-                                <h4 v-if="server_type === '' || server_type === serverType"
-                                    class="text-white text-left m-1">{{
+                            <div>
+                                <h4 class="text-white text-left m-1">{{
             currentTrack.album }}</h4>
 
                             </div>
 
                             <hr class="my-1 h-0.5 border-t-0 bg-neutral-100 opacity-100 dark:opacity-50" />
                             <h1 class="text-white text-left m-1"> Auteur </h1>
-                            <div v-for="serverType in serverTypes" :key="serverType">
-                                <h4 v-if="server_type === '' || server_type === serverType && serverType === 'icecast'"
-                                    class="text-white text-left m-1"> {{
-            currentTrack.server_name }} </h4>
-                                <h4 v-if="server_type === '' || server_type === serverType"
-                                    class="text-white text-left m-1"> {{
+                            <div>
+                                <h4 class="text-white text-left m-1"> {{
             currentTrack.author }} </h4>
                             </div>
                             <hr class="my-1 h-0.5 border-t-0 bg-neutral-100 opacity-100 dark:opacity-50" />
@@ -500,29 +496,30 @@ onUnmounted(() => {
                     <div class="col-span-3" id="audioMetaD">
                         <div class="flex p-1">
                             <div id="cardPlayer" class="p-1 m-1 bg-gray-200 rounded-lg">
-                                <div> 
-                                    <img :src="icecastImgUrl || img" v-if="server_type === 'icecast'" class="max-md:w-48 max-md:h-28"
-                                        alt="" srcset="">
+                                <div>
+                                    <!-- <img :src="icecastImgUrl || img" v-if="server_type === 'icecast'"
+                                        class="max-md:w-48 max-md:h-28" alt="" srcset="">
                                     <img :src="icecastImgUrl || img" v-if="server_type === 'shoutcast'"
                                         class="max-md:w-48 max-md:h-28" alt="" srcset="">
                                     <img :src="currentTrack.img_medium_url || img"
                                         v-if="server_type === 'everestcast' || server_type === 'rcast' || server_type === 'centovacast' || server_type === 'radioking' || server_type === 'azuracast'"
+                                        class="max-md:w-14 md:w-20 md:h-20 max-md:h-14" alt="" srcset=""> -->
+                                    <img :src="currentTrack.img_medium_url || img || icecastImgUrl"
                                         class="max-md:w-14 md:w-20 md:h-20 max-md:h-14" alt="" srcset="">
                                 </div>
                             </div>
                             <div class="p-4">
-                                <div v-for="serverType in serverTypes" :key="serverType">
-
-                                    <h1 v-if="server_type === serverType" class="text-gray-200 text-xl text-left"> {{
+                                <div>
+                                    <h1 class="text-gray-200 text-xl text-left"> {{
             currentTrack.title }} </h1>
-                                    <h1 class="text-gray-200 text-xl text-left"> {{ message }} </h1>
 
-                                    <h3 v-if="server_type === serverType && serverType === 'icecast'"
+
+                                    <!-- <h3 v-if="server_type === serverType && serverType === 'icecast'"
                                         class="text-gray-200 text-md text-left"> {{ currentTrack.server_description }}
                                     </h3>
 
                                     <h3 v-if="server_type === serverType && serverType === 'shoutcast' || serverType === 'everest_cast'"
-                                        class="text-gray-200 text-md text-left"> {{ currentTrack.metadata }}</h3>
+                                        class="text-gray-200 text-md text-left"> {{ currentTrack.metadata }}</h3> -->
                                 </div>
 
 
@@ -768,7 +765,8 @@ onUnmounted(() => {
 </template>
 
 <style>
-body, html {
+body,
+html {
     margin: 0;
     padding: 0;
     height: 100%;
@@ -776,8 +774,8 @@ body, html {
 
 .containerRadio {
     width: 100%;
-    height: 100%; 
+    height: 100%;
     background-size: cover;
-    background-position: center; 
+    background-position: center;
 }
 </style>
