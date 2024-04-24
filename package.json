@@ -55,6 +55,7 @@
     "@vue/cli-plugin-unit-jest": "~5.0.8",
     "@vue/cli-plugin-vuex": "~5.0.8",
     "@vue/cli-service": "~5.0.8",
+    "@vue/devtools": "^7.0.27",
     "@vue/eslint-config-typescript": "^9.1.0",
     "@vue/test-utils": "^2.4.3",
     "@vue/vue3-jest": "^27.0.0",

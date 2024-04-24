@@ -10,15 +10,15 @@ const routes: Array<RouteRecordRaw> = [
   },
   {
     //path: '/:current_radio_id/:url_server_radio/:url_flux_radio/:server_type',
-    path: '/:radio_name',
+    path: '/:radio',
     name: 'home',
     component: HomeView
   },
-  {
-    path: '/',
-    name: 'home',
-    component: HomeView
-  }  
+  // {
+  //   path: '/',
+  //   name: 'home',
+  //   component: HomeView
+  // }  
 ]
 
 const router = createRouter({

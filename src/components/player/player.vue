@@ -31,10 +31,10 @@ const getRadioByName = async (radioName: string) => {
             return;
         }
 
-        const response = await axios.get(`http://localhost:8030/api/radios/${radioName}`, {
+        const response = await axios.get(`https://admin.radiowebapp.com/api/radios${radioName}`, {
             headers: {
                 //'Authorization': `Ekila ${localStorage.getItem("access-token")}`
-                'Authorization': 'Ekila eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzEzMjgwMTAyLCJpYXQiOjE3MTMyNzY1MDIsImp0aSI6IjJhZTE1ODAyZGJiNTQxZDM5NGNhYmMyNjA3ZWU2ZThjIiwidXNlcl9pZCI6Mn0.aNVuLfNuEoPeChZjoWAkje0oP5_N1yXXCF4zZSOdLGI'
+                'Authorization': 'Ekila eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzEzODUyNzM4LCJpYXQiOjE3MTM4NDkxMzgsImp0aSI6IjFiYmJiZGZkNWM0YjQwZTlhMGZhYWE5NzBhMTBiZmUxIiwidXNlcl9pZCI6Mn0.T5giafVj_guVzg3XHoVlJ4TlcDSQH4rmoP6PoM4hy5g'
             }
         });
 
@@ -54,9 +54,9 @@ const getRadioByName = async (radioName: string) => {
         updateMetadata();
 
         // Update every 2 minutes
-        setInterval(updateMetadata, 2 * 60 * 1000); // 2 minutes in milliseconds
+        setInterval(updateMetadata, 4 * 60 * 1000); // 2 minutes in milliseconds
 
-        console.log('history', historyTrack.value)
+        //console.log('history', historyTrack.value)
     } catch (error) {
         console.error('Failed to fetch radios:', error.message);
         if (error.response && error.response.status === 401) {
@@ -289,10 +289,10 @@ currentAdvert.value = advertLists.value[currentAdIndex.value];
 
 const getAdvert = async () => {
     try {
-        axios.get(`https://admin.radiowebapp.com/api/publicities/`, {
+        axios.get(`http://localhost:8030/api/publicities/`, {
             headers: {
                 //'Authorization': `Ekila ${localStorage.getItem("playerAccessToken")}`,
-                'Authorization': 'Ekila eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzEzMjgwMTAyLCJpYXQiOjE3MTMyNzY1MDIsImp0aSI6IjJhZTE1ODAyZGJiNTQxZDM5NGNhYmMyNjA3ZWU2ZThjIiwidXNlcl9pZCI6Mn0.aNVuLfNuEoPeChZjoWAkje0oP5_N1yXXCF4zZSOdLGI',
+                'Authorization': 'Ekila eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzEzODUyNzM4LCJpYXQiOjE3MTM4NDkxMzgsImp0aSI6IjFiYmJiZGZkNWM0YjQwZTlhMGZhYWE5NzBhMTBiZmUxIiwidXNlcl9pZCI6Mn0.T5giafVj_guVzg3XHoVlJ4TlcDSQH4rmoP6PoM4hy5g',
                 'Content-Type': 'application/json'
             }
         }).then(response => {
@@ -335,11 +335,12 @@ const messages = ref<string[]>([]);
 
 
 onMounted(async () => {
+    
     // Fetch metadata when the component is mounted
-    const route = useRoute();
-    //const { route_access_token, route_current_radio_id, route_url_api_radio_history, route_url_api_radio, route_url_flux_radio, route_server_type } = route.query;
-
-    const { radio_name } = route.query;
+    const route = useRoute(); 
+    const radio_name = route.path;
+    console.log('!!'); 
+    console.log("route 000",radio_name);
     await getRadioByName(radio_name);
 
     if (radio_name !== undefined) {
@@ -390,10 +391,10 @@ onUnmounted(() => {
 
 <template>
     <div>
-        <div class="container-fluid  h-screen  bg-fixed m-0 p-0 containerRadio"
-            :style="{ 'background-color': currentBgColor || '#FF6503' }">
+        <div class="  m-0 p-4 containerRadio "
+            :style="{ 'background-color': currentBgColor || '#FF6503' , 'background-attachment': 'fixed' }">
 
-            <div class="container-fluid  max-md:hidden h-screen">
+            <div class="container-fluid  max-md:hidden h-full">
                 <ModalsContainer />
                 <BluetoothModal :show="modal1.isOpen" @close="modal1.close" />
                 <div class="grid grid-cols-12">
@@ -651,7 +652,7 @@ onUnmounted(() => {
 
                 <!-- <button @click="update"> Click </button> -->
             </div>
-            <div class="md:hidden container-fluid h-screen">
+            <div class="md:hidden container-fluid h-full">
                 <!-- <h1> mobile </h1> -->
                 <div class="mx-11 mt-4 p-1 rounded-lg bg-gradient-to-r from-gray-200/25 to-gray-100 w-72 h-80">
                     <div class="m-5 h-72">
