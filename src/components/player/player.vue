@@ -22,18 +22,19 @@ const historyTrack = ref([]);
 const icecastImgUrl = ref("");
 console.log("+++", currentTrack, historyTrack);
 
+
 const route = useRoute();
 const router = useRouter();
 onBeforeMount(() => {
   if (localStorage.getItem("access-token")) {
     return;
   }
-  console.log('++++',route.query.route_access_token);
+  console.log('++++', route.query.route_access_token);
   localStorage.setItem(
     "access-token",
     route.query.route_access_token as string
   );
- 
+
 });
 
 onMounted(async () => {
@@ -93,7 +94,7 @@ const getRadioByName = async (radioName: string) => {
       console.error("Unauthorized access:", error.response.data);
     } else {
       // Handle other errors
-      console.error("Other error:", error);
+      console.error("other error:", error);
     }
   }
 };
@@ -101,11 +102,20 @@ const getRadioByName = async (radioName: string) => {
 const updateMetadata = async () => {
   switch (localStorage.getItem("playerServerType")) {
     case "icecast":
+      return currentTrack.value = {
+        title: "no metadata",
+        album: "no metadata",
+        author: "no metadata",
+        img_medium_url: "",
+      };
     case "shoutcast":
+
       currentTrack.value = await fetchAndProcessRadioData(
         localStorage.getItem("playerUrlApi")
       );
+
       icecastImgUrl.value = await getImgTrack(currentTrack.value.title);
+      alert("radio ")
       getColorImg(icecastImgUrl.value, (bgColor) => {
         console.log("Background color:", bgColor);
       });
@@ -466,7 +476,7 @@ onUnmounted(() => {
             </div>
           </div>
           <div class="col-span-3 bg-slate-100/25 rounded-lg m-1">
-            <div class="m-6 p-1 rounded-lg bg-gray-200"> 
+            <div class="m-6 p-1 rounded-lg bg-gray-200">
               <img :src="currentTrack.img_medium_url || img || icecastImgUrl" alt="" class="w-full h-32 rounded-lg" />
             </div>
             <div class="p-3">
@@ -619,7 +629,7 @@ onUnmounted(() => {
             <!-- <h3> audio Control </h3> -->
             <div>
               <div class="flex ml-12 mb-4" id="controlOption">
-                <VButton class="m-1"> 
+                <VButton class="m-1">
                 </VButton>
                 <!-- <VButton class="m-1">
                   <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -632,7 +642,7 @@ onUnmounted(() => {
                     </g>
                   </svg>
                 </VButton> -->
-                 <!-- <VButton class="m-1" @click="openModal1()">
+                <!-- <VButton class="m-1" @click="openModal1()">
                   <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
                     <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
@@ -705,7 +715,7 @@ onUnmounted(() => {
           <div class="mt-4 flex">
             <h1 class="text-white text-left text-md">{{ message }}</h1>
             <div class="flex ml-48">
-             <!-- <VButton class="m-1">
+              <!-- <VButton class="m-1">
                 <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
                   <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
@@ -725,7 +735,7 @@ onUnmounted(() => {
                       stroke-linejoin="round"></path>
                   </g>
                 </svg>
-              </VButton> 
+              </VButton>
             </div>
           </div>
 
