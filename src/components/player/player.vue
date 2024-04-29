@@ -109,22 +109,34 @@ const updateMetadata = async () => {
         img_medium_url: "",
       };
     case "shoutcast":
+    return currentTrack.value = {
+        title: "no metadata",
+        album: "no metadata",
+        author: "no metadata",
+        img_medium_url: "",
+      };
+      // currentTrack.value = await fetchAndProcessRadioData(
+      //   localStorage.getItem("playerUrlApi")
+      // );
 
-      currentTrack.value = await fetchAndProcessRadioData(
-        localStorage.getItem("playerUrlApi")
-      );
-
-      icecastImgUrl.value = await getImgTrack(currentTrack.value.title);
-      alert("radio ")
-      getColorImg(icecastImgUrl.value, (bgColor) => {
-        console.log("Background color:", bgColor);
-      });
+      // icecastImgUrl.value = await getImgTrack(currentTrack.value.title);
+      // alert("radio ")
+      // getColorImg(icecastImgUrl.value, (bgColor) => {
+      //   console.log("Background color:", bgColor);
+      // });
       break;
     case "rcast":
     case "centovacast":
-    case "azuracast":
     case "radioking":
     case "everestcast":
+    case "everestpanel":
+    return currentTrack.value = {
+        title: "no metadata",
+        album: "no metadata",
+        author: "no metadata",
+        img_medium_url: "",
+      };
+    case "azuracast":
       currentTrack.value = await fetchAndProcessRadioData(
         localStorage.getItem("playerUrlApi")
       );
