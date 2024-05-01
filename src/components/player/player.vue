@@ -25,14 +25,13 @@ console.log("+++", currentTrack, historyTrack);
 
 const route = useRoute();
 const router = useRouter();
-onBeforeMount(() => {
+onBeforeMount(() => { 
   if (localStorage.getItem("access-token")) {
     return;
   }
   console.log('++++', route.query.route_access_token);
-  localStorage.setItem(
-    "access-token",
-    route.query.route_access_token as string
+  localStorage.setItem("access-token",
+    route.query.route_access_token
   );
 
 });
@@ -45,6 +44,7 @@ onMounted(async () => {
   await getRadioByName(radio_name);
 });
 
+ 
 const getRadioByName = async (radioName: string) => {
   try {
     if (!radioName) {
@@ -75,8 +75,7 @@ const getRadioByName = async (radioName: string) => {
       localStorage.setItem(
         "playerUrlApiHistory",
         responseData.url_api_radio_history
-      );
-      localStorage.setItem("playerAccessToken", responseData.access_token);
+      ); 
       localStorage.setItem("playerRadioID", responseData.id);
     }
 
@@ -126,7 +125,6 @@ const updateMetadata = async () => {
       // });
       break;
     case "rcast":
-    case "centovacast":
     case "radioking":
     case "everestcast":
     case "everestpanel":
@@ -137,6 +135,7 @@ const updateMetadata = async () => {
         img_medium_url: "",
       };
     case "azuracast":
+    case "centovacast":
       currentTrack.value = await fetchAndProcessRadioData(
         localStorage.getItem("playerUrlApi")
       );
@@ -407,6 +406,7 @@ const message = ref("");
 const loading = ref(true);
 
 onMounted(async () => {
+  
   // Fetch metadata when the component is mounted
   const route = useRoute();
   //const { route_access_token, route_current_radio_id, route_url_api_radio_history, route_url_api_radio, route_url_flux_radio, route_server_type } = route.query;
@@ -453,14 +453,15 @@ onUnmounted(() => {
   if (chatSocket.value) {
     chatSocket.value.close();
   }
+
+  localStorage.clear();
 });
 </script>
 
-<template>
-  <div>
-    <div class="container-fluid h-screen bg-fixed m-0 p-0 containerRadio"
-      :style="{ 'background-color': currentBgColor || '#FF6503' }">
-      <div class="container-fluid max-md:hidden h-screen">
+<template >
+  <div :style="{ 'background-color': currentBgColor || '#FF6503' }" >
+    <div class="container-fluid m-0 p-2">
+      <div class="container-fluid max-md:hidden min-h-screen">
         <!-- <ModalsContainer />
         <BluetoothModal :show="modal1.isOpen" @close="modal1.close" /> -->
         <div class="grid grid-cols-12">
@@ -475,7 +476,7 @@ onUnmounted(() => {
               </marquee>
             </div>
             <div id="cards-section" class="">
-              <div class="p-1 mx-7 flex overSVGRepo_iconCarrierflow-x-scroll hide-scrollbar">
+              <div class="p-1 mx-7 flex flex-wrap overSVGRepo_iconCarrierflow-x-scroll hide-scrollbar">
                 <div v-for="data in historyTrack" :key="data.id"
                   class="w-48 h-64 border-black-300/75 rounded-lg shadow-2xl px-4 m-1">
                   <img :src="data.img_url" class="rounded-lg h-40" alt="" srcset="" />
@@ -686,9 +687,9 @@ onUnmounted(() => {
 
         <!-- <button @click="update"> Click </button> -->
       </div>
-      <div class="md:hidden container-fluid h-screen">
+      <div class="md:hidden container-fluid ">
         <!-- <h1> mobile </h1> -->
-        <div class="mx-11 mt-4 p-1 rounded-lg bg-gradient-to-r from-gray-200/25 to-gray-100 w-72 h-80">
+        <div class="mx-11 mt-4 p-1 rounded-lg bg-gradient-to-r from-gray-200/25 to-gray-100 w-72 h-80 ">
           <div class="m-5 h-72">
             <!-- <img :src="icecastImgUrl || img" alt="" class="rounded-lg h-60"> -->
             <!-- <img :src="currentTrack.img_large_url || img" v-if="server_type === 'shoutcast'" alt=""
@@ -799,18 +800,8 @@ onUnmounted(() => {
 </template>
 
 <style>
-body,
-html {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-}
+ 
 
-.containerRadio {
-  width: 100%;
-  height: 100%;
-  background-size: cover;
-  background-position: center;
-}
+ 
 </style>
-localStorage.setItem("access-token", route.params["access-token"])
+<!-- localStorage.setItem("access-token", route.params["access-token"]) -->
