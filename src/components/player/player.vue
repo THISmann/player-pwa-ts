@@ -53,7 +53,7 @@ const getRadioByName = async (radioName: string) => {
     }
 
     const response = await axios.get(
-      `https://admin.radiowebapp.com/api/radios/name/${radioName}`,
+      `${BASE_URL}radios/name/${radioName}`,
       {
         headers: {
           //'Authorization': `Ekila ${localStorage.getItem("access-token")}`
@@ -359,7 +359,7 @@ currentAdvert.value = advertLists.value[currentAdIndex.value];
 const getAdvert = async () => {
   try {
     axios
-      .get(`https://admin.radiowebapp.com/api/publicities/`, {
+      .get(`${BASE_URL}publicities/`, {
         headers: {
           'Authorization': `Ekila ${localStorage.getItem("access-token")}`,
           // Authorization:
