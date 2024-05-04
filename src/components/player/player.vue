@@ -20,12 +20,13 @@ const publicitySocket = ref<WebSocket | null>(null);
 const currentTrack = ref([]);
 const historyTrack = ref([]);
 const icecastImgUrl = ref("");
+const fluxRadio = ref(localStorage.getItem('playerUrlFlux') || "https://azc1.pro-fhi.net/hls/webradiolatinos/live.m3u8");
 console.log("+++", currentTrack, historyTrack);
 
 
 const route = useRoute();
 const router = useRouter();
-onBeforeMount(() => { 
+onBeforeMount(() => {
   if (localStorage.getItem("access-token")) {
     return;
   }
@@ -44,7 +45,7 @@ onMounted(async () => {
   await getRadioByName(radio_name);
 });
 
- 
+
 const getRadioByName = async (radioName: string) => {
   try {
     if (!radioName) {
@@ -75,7 +76,7 @@ const getRadioByName = async (radioName: string) => {
       localStorage.setItem(
         "playerUrlApiHistory",
         responseData.url_api_radio_history
-      ); 
+      );
       localStorage.setItem("playerRadioID", responseData.id);
     }
 
@@ -102,16 +103,16 @@ const updateMetadata = async () => {
   switch (localStorage.getItem("playerServerType")) {
     case "icecast":
       return currentTrack.value = {
-        title: "no metadata",
-        album: "no metadata",
-        author: "no metadata",
+        title: "indisponible",
+        album: "indisponible",
+        author: "indisponible",
         img_medium_url: "",
       };
     case "shoutcast":
-    return currentTrack.value = {
-        title: "no metadata",
-        album: "no metadata",
-        author: "no metadata",
+      return currentTrack.value = {
+        title: "indisponible",
+        album: "indisponible",
+        author: "indisponible",
         img_medium_url: "",
       };
       // currentTrack.value = await fetchAndProcessRadioData(
@@ -128,10 +129,10 @@ const updateMetadata = async () => {
     case "radioking":
     case "everestcast":
     case "everestpanel":
-    return currentTrack.value = {
-        title: "no metadata",
-        album: "no metadata",
-        author: "no metadata",
+      return currentTrack.value = {
+        title: "indisponible",
+        album: "indisponible",
+        author: "indisponible",
         img_medium_url: "",
       };
     case "azuracast":
@@ -238,28 +239,28 @@ const fluxData = ref({
 
 // Clear listener after first call.
 const loadFlux = ref(true);
-sound.once("load", function () {
-  loadFlux.value = false;
-  console.log("chargement");
-  sound.play();
-});
+// sound.once("load", function () {
+//   loadFlux.value = false;
+//   console.log("chargement");
+//   sound.play(); 
+// });
 
-// Fires when the sound finishes playing.
-sound.on("end", function () {
-  console.log("Finished!");
-});
+// // Fires when the sound finishes playing.
+// sound.on("end", function () {
+//   console.log("Finished!");
+// });
 
 // Listen for the 'loaderror' event on the Howl object
-sound.on("loaderror", (id, error) => {
-  logToServer("error", error);
+sound.on("loaderror", (id, error) => { 
   console.error("Load error:", error, "in the following Id ", id);
+  alert(  "flux radio instable actuellement");
   // Handle the error, e.g., show a message to the user
 });
 
 // Listen for the 'loaderror' event on the Howl object
-sound.on("playerror", (error) => {
-  logToServer("error", error);
+sound.on("playerror", (error) => { 
   console.error("player error:", error);
+  alert(error);
   // Handle the error, e.g., show a message to the user
 });
 
@@ -317,8 +318,10 @@ const togglePlayback = () => {
   const shouldPlay = !isPlaying.value;
   if (shouldPlay) {
     sound.pause();
+   
   } else {
     sound.play();
+ 
   }
   play.value = shouldPlay;
   playMobile.value = shouldPlay;
@@ -406,7 +409,7 @@ const message = ref("");
 const loading = ref(true);
 
 onMounted(async () => {
-  
+
   // Fetch metadata when the component is mounted
   const route = useRoute();
   //const { route_access_token, route_current_radio_id, route_url_api_radio_history, route_url_api_radio, route_url_flux_radio, route_server_type } = route.query;
@@ -458,8 +461,8 @@ onUnmounted(() => {
 });
 </script>
 
-<template >
-  <div :style="{ 'background-color': currentBgColor || '#FF6503' }" >
+<template>
+  <div :style="{ 'background-color': currentBgColor || '#FF6503' }">
     <div class="container-fluid m-0 p-2">
       <div class="container-fluid max-md:hidden min-h-screen">
         <!-- <ModalsContainer />
@@ -524,28 +527,28 @@ onUnmounted(() => {
 
               <div v-for="serverType in serverTypes" :key="serverType">
                 <h4 v-if="server_type === '' ||
-        (server_type === serverType && serverType === 'icecast')
-        " class="text-white text-left m-1">
+    (server_type === serverType && serverType === 'icecast')
+    " class="text-white text-left m-1">
                   {{
-        currentTrack.server_description === null
-          ? "default"
-          : currentTrack.server_description
-      }}
+    currentTrack.server_description === null
+      ? "default"
+      : currentTrack.server_description
+  }}
                 </h4>
                 <h4 v-if="server_type === '' ||
-        (server_type === serverType && serverType === 'shoutcast')
-        " class="text-white text-left m-1">
+    (server_type === serverType && serverType === 'shoutcast')
+    " class="text-white text-left m-1">
                   {{
-        currentTrack.genre === null ? "default" : currentTrack.genre
-      }}
+    currentTrack.genre === null ? "default" : currentTrack.genre
+  }}
                 </h4>
                 <h4 v-if="server_type === '' ||
-        server_type === serverType ||
-        server_type === 'centovacast'
-        " class="text-white text-left m-1">
+    server_type === serverType ||
+    server_type === 'centovacast'
+    " class="text-white text-left m-1">
                   {{
-        currentTrack.genre === null ? "default" : currentTrack.genre
-      }}
+    currentTrack.genre === null ? "default" : currentTrack.genre
+  }}
                 </h4>
               </div>
               <hr class="my-1 h-0.5 border-t-0 bg-neutral-100 opacity-100 dark:opacity-50" />
@@ -558,7 +561,12 @@ onUnmounted(() => {
           <div class="col-span-3" id="audioMetaD">
             <div class="flex p-1">
               <div id="cardPlayer" class="p-1 m-1 bg-gray-200 rounded-lg">
+
                 <div>
+                  <!-- <video controls autoplay>
+                    <source :srcObject="STREAMING_LINK" type="audio/mpeg">
+                  </video> -->
+                  <!-- <video :srcObject="STREAMING_LINK"   autoplay></video> -->
                   <!-- <img :src="icecastImgUrl || img" v-if="server_type === 'icecast'"
                                         class="max-md:w-48 max-md:h-28" alt="" srcset="">
                                     <img :src="icecastImgUrl || img" v-if="server_type === 'shoutcast'"
@@ -698,14 +706,15 @@ onUnmounted(() => {
             <img :src="icecastImgUrl || img" v-if="server_type === 'icecast'" alt="" class="w-full h-60 rounded-lg" />
             <img :src="icecastImgUrl || img" v-if="server_type === 'shoutcast'" alt="" class="w-full h-60 rounded-lg" />
             <img :src="currentTrack.img_medium_url || img" v-if="server_type === 'everestcast' ||
-        server_type === 'rcast' ||
-        server_type === 'centovacast' ||
-        server_type === 'radioking' ||
-        server_type === 'azuracast'
-        " alt="" class="w-full h-60 rounded-lg" />
+    server_type === 'rcast' ||
+    server_type === 'centovacast' ||
+    server_type === 'radioking' ||
+    server_type === 'azuracast'
+    " alt="" class="w-full h-60 rounded-lg" />
 
             <h1 class="mt-4 text-white text-left text-sm bg-gray-400 m-1 p-1">
               {{ currentTrack.title }}
+
             </h1>
 
             <!-- <span><svg aria-hidden="true" role="status" class="inline w-4 h-4 me-3 text-white animate-spin"
@@ -792,16 +801,12 @@ onUnmounted(() => {
           </div>
         </div>
         <div class="flex p-1 mx-7 overflow-x-auto">
-          <InstallButton />
+          <!-- <InstallButton /> -->
         </div>
       </div>
     </div>
   </div>
 </template>
 
-<style>
- 
-
- 
-</style>
+<style></style>
 <!-- localStorage.setItem("access-token", route.params["access-token"]) -->
