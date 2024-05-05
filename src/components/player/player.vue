@@ -19,8 +19,7 @@ const publicitySocket = ref<WebSocket | null>(null);
 
 const currentTrack = ref([]);
 const historyTrack = ref([]);
-const icecastImgUrl = ref("");
-const fluxRadio = ref(localStorage.getItem('playerUrlFlux') || "https://azc1.pro-fhi.net/hls/webradiolatinos/live.m3u8");
+const icecastImgUrl = ref(""); 
 console.log("+++", currentTrack, historyTrack);
 
 
@@ -426,25 +425,25 @@ onMounted(async () => {
   await getAdvert();
   setInterval(showNextAdvert, 10000);
 
-  chatSocket.value = new WebSocket(
-    "wss://www.admin.radiowebapp.com:443/sync/ws/radio/?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzExNjkwMjM1LCJpYXQiOjE3MTE2ODY2MzUsImp0aSI6ImE5ZTAwZmE2NDdmZTQ4OGRiMGY5YzI2Y2RmZmQ5NWM5IiwidXNlcl9pZCI6Mn0.UQ_IBTGCUG5_S0c_7gfvV5_2dVzwWoiIAae7N-jmXRM"
-  );
+  // chatSocket.value = new WebSocket(
+  //   "wss://www.admin.radiowebapp.com:443/sync/ws/radio/?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzExNjkwMjM1LCJpYXQiOjE3MTE2ODY2MzUsImp0aSI6ImE5ZTAwZmE2NDdmZTQ4OGRiMGY5YzI2Y2RmZmQ5NWM5IiwidXNlcl9pZCI6Mn0.UQ_IBTGCUG5_S0c_7gfvV5_2dVzwWoiIAae7N-jmXRM"
+  // );
 
-  publicitySocket.value = new WebSocket(
-    "wss://www.admin.radiowebapp.com:443/sync/ws/publicity/?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzExNjkwMjM1LCJpYXQiOjE3MTE2ODY2MzUsImp0aSI6ImE5ZTAwZmE2NDdmZTQ4OGRiMGY5YzI2Y2RmZmQ5NWM5IiwidXNlcl9pZCI6Mn0.UQ_IBTGCUG5_S0c_7gfvV5_2dVzwWoiIAae7N-jmXRM"
-  );
+  // publicitySocket.value = new WebSocket(
+  //   "wss://www.admin.radiowebapp.com:443/sync/ws/publicity/?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzExNjkwMjM1LCJpYXQiOjE3MTE2ODY2MzUsImp0aSI6ImE5ZTAwZmE2NDdmZTQ4OGRiMGY5YzI2Y2RmZmQ5NWM5IiwidXNlcl9pZCI6Mn0.UQ_IBTGCUG5_S0c_7gfvV5_2dVzwWoiIAae7N-jmXRM"
+  // );
 
-  if (chatSocket.value) {
-    chatSocket.value.onmessage = handleMessage;
-    chatSocket.value.onclose = handleClose;
-    chatSocket.value.onopen = handleOpen;
-  }
+  // if (chatSocket.value) {
+  //   chatSocket.value.onmessage = handleMessage;
+  //   chatSocket.value.onclose = handleClose;
+  //   chatSocket.value.onopen = handleOpen;
+  // }
 
-  if (publicitySocket.value) {
-    publicitySocket.value.onmessage = handleMessagePub;
-    publicitySocket.value.onclose = handleClosePub;
-    publicitySocket.value.onopen = handleOpenPub;
-  }
+  // if (publicitySocket.value) {
+  //   publicitySocket.value.onmessage = handleMessagePub;
+  //   publicitySocket.value.onclose = handleClosePub;
+  //   publicitySocket.value.onopen = handleOpenPub;
+  // }
 });
 
 onUnmounted(() => {
@@ -453,11 +452,7 @@ onUnmounted(() => {
     sound.unload(); // Déchargez la ressource audio
   }
 
-  if (chatSocket.value) {
-    chatSocket.value.close();
-  }
-
-  localStorage.clear();
+  
 });
 </script>
 
@@ -465,8 +460,8 @@ onUnmounted(() => {
   <div :style="{ 'background-color': currentBgColor || '#FF6503' }">
     <div class="container-fluid m-0 p-2">
       <div class="container-fluid max-md:hidden min-h-screen">
-        <!-- <ModalsContainer />
-        <BluetoothModal :show="modal1.isOpen" @close="modal1.close" /> -->
+        <ModalsContainer />
+        <BluetoothModal :show="modal1.isOpen" @close="modal1.close" />  
         <div class="grid grid-cols-12">
           <div class="col-span-9 bg-slate-100/25 rounded-lg m-1">
             <div v-for="advert in advertLists" :key="advert.id" v-show="advert === currentAdvert"
@@ -652,7 +647,7 @@ onUnmounted(() => {
               <div class="flex ml-12 mb-4" id="controlOption">
                 <VButton class="m-1">
                 </VButton>
-                <!-- <VButton class="m-1">
+                  <!-- <VButton class="m-1">
                   <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
                     <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
@@ -662,8 +657,8 @@ onUnmounted(() => {
                         fill="#fcfcfc"></path>
                     </g>
                   </svg>
-                </VButton> -->
-                <!-- <VButton class="m-1" @click="openModal1()">
+                </VButton>   -->
+                <VButton class="m-1" @click="openModal1()">
                   <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
                     <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
@@ -672,7 +667,7 @@ onUnmounted(() => {
                         stroke-linejoin="round"></path>
                     </g>
                   </svg>
-                </VButton> -->
+                </VButton>
               </div>
               <div class="flex" id="volumeControl">
                 <VButton>

@@ -75,7 +75,7 @@ dependencies:
     specifier: 8.0.0-rc.1
     version: 8.0.0-rc.1(vue@3.4.19)
   vue-final-modal:
-    specifier: ^4.5.3
+    specifier: ^4.5.4
     version: 4.5.4(@vueuse/core@10.8.0)(@vueuse/integrations@10.8.0)(focus-trap@7.5.4)(vue@3.4.19)
   vue-local-storage:
     specifier: ^0.1.3

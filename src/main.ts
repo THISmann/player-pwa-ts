@@ -3,5 +3,10 @@ import App from "./App.vue";
 import "./registerServiceWorker";
 import router from "./router";
 import "./assets/tailwind.css";
+import 'vue-final-modal/style.css';
+import { createVfm } from 'vue-final-modal'
 
-createApp(App).use(router).mount("#app");
+
+const vfm = createVfm();
+
+createApp(App).use(vfm).use(router).mount("#app");
