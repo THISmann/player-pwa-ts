@@ -10,10 +10,12 @@ import img from "./logo.png";
 import themeColor from "./colorExtraction";
 import { useRoute, useRouter } from "vue-router";
 import InstallButton from "./installButton.vue";
-import { fetchAndProcessRadioData } from "./fetchAndProcessRadioData";
+//import { fetchAndProcessRadioData } from "./fetchAndProcessRadioData";
 import { getHistoryTracks } from "./historyFetcher";
 import { getImgTrack } from "./imageUtils";
+import { useRadioStore } from '@/store/radioStore';
 
+const radioStore = useRadioStore();
 const chatSocket = ref<WebSocket | null>(null);
 const publicitySocket = ref<WebSocket | null>(null);
 
@@ -26,21 +28,24 @@ console.log("+++", currentTrack, historyTrack);
 const route = useRoute();
 const router = useRouter();
 onBeforeMount(() => {
-  if (localStorage.getItem("access-token")) {
-    return;
-  }
-  console.log('++++', route.query.route_access_token);
+  radioStore.radioToken = route.query.route_access_token
+  radioStore.radioName = route.query.route_radio_name
+  // if (localStorage.getItem("access-token") !== undefined) {
+  //   return;
+  // } 
+  
   localStorage.setItem("access-token",
     route.query.route_access_token
   );
-
 });
 
 onMounted(async () => {
-  await router.replace(window.location.pathname);
+  //await router.replace(window.location.pathname);
   // Fetch metadata when the component is mounted
   const route = useRoute();
   const radio_name = route.path;
+  process.env.VUE_APP_PWA_NAME = radio_name;
+  radioStore.radioName = radio_name;
   await getRadioByName(radio_name);
 });
 
@@ -66,24 +71,25 @@ const getRadioByName = async (radioName: string) => {
     const responseData = response.data;
 
     if (responseData) {
-      localStorage.setItem("playerServerType", responseData.server_type);
-      localStorage.setItem("playerUrlFlux", responseData.url_flux_radio);
-      localStorage.setItem(
-        "playerUrlApi",
-        responseData.url_api_radio_current_song
-      );
-      localStorage.setItem(
-        "playerUrlApiHistory",
-        responseData.url_api_radio_history
-      );
-      localStorage.setItem("playerRadioID", responseData.id);
+      radioStore.currentRadio = responseData;
+      // localStorage.setItem("playerServerType", responseData.server_type);
+      // localStorage.setItem("playerUrlFlux", responseData.url_flux_radio);
+      // localStorage.setItem(
+      //   "playerUrlApi",
+      //   responseData.url_api_radio_current_song
+      // );
+      // localStorage.setItem(
+      //   "playerUrlApiHistory",
+      //   responseData.url_api_radio_history
+      // );
+      // localStorage.setItem("playerRadioID", responseData.id);
     }
 
     // Call updateBackgroundColor immediately
     updateMetadata();
 
     // Update every 2 minutes
-    setInterval(updateMetadata, 2 * 60 * 1000); // 2 minutes in milliseconds
+    setInterval(updateMetadata, 1 * 60 * 1000); // 2 minutes in milliseconds
 
     console.log("history", historyTrack.value);
   } catch (error) {
@@ -99,7 +105,8 @@ const getRadioByName = async (radioName: string) => {
 };
 
 const updateMetadata = async () => {
-  switch (localStorage.getItem("playerServerType")) {
+  //localStorage.getItem("playerServerType") 
+  switch (radioStore.currentRadio.server_type) {
     case "icecast":
       return currentTrack.value = {
         title: "indisponible",
@@ -137,14 +144,17 @@ const updateMetadata = async () => {
     case "azuracast":
     case "centovacast":
       currentTrack.value = await fetchAndProcessRadioData(
-        localStorage.getItem("playerUrlApi")
+        //localStorage.getItem("playerUrlApi")
+        radioStore.currentRadio.url_api_radio_current_song
       );
       getColorImg(currentTrack.value.img_medium_url, (bgColor) => {
         console.log("Background color:", bgColor);
       });
       historyTrack.value = await getHistoryTracks(
-        localStorage.getItem("playerUrlApiHistory"),
-        localStorage.getItem("playerServerType")
+        // localStorage.getItem("playerUrlApiHistory"),
+        // localStorage.getItem("playerServerType")
+        radioStore.currentRadio.url_api_radio_history,
+        radioStore.currentRadio.server_type
       );
       break;
   }
@@ -158,8 +168,8 @@ const updateMetadata = async () => {
 const handleMessage = (e: MessageEvent) => {
   const data = JSON.parse(e.data);
 
-  console.log("route_current_radio_id", localStorage.getItem("playerRadioID"));
-  if (localStorage.getItem("playerRadioID") == data.radio.id) {
+  //localStorage.getItem("playerRadioID")
+  if (radioStore.currentRadio.id == data.radio.id) {
     switch (data.action) {
       case "update":
         console.log("mise a jour");
@@ -222,7 +232,8 @@ const handleOpenPub = () => {
 
 const play = ref(true);
 const playMobile = ref(true);
-const STREAMING_LINK = localStorage.getItem("playerUrlFlux");
+const STREAMING_LINK = radioStore.currentRadio.url_flux_radio;
+// localStorage.getItem("playerUrlFlux");
 const sound = new Howl({
   src: [STREAMING_LINK],
   autoplay: true,
@@ -294,7 +305,8 @@ const createUseModal = (component: any, title: string) => {
 const modal1 = createUseModal(BluetoothModal, "Bluetooth settings");
 const openModal1 = async () => await modal1.open();
 
-const server_type = ref(localStorage.getItem("playerServerType"));
+const server_type = radioStore.currentRadio.server_type;
+//ref(localStorage.getItem("playerServerType"));
 const isPlaying = ref(false);
 const volume = ref(1.0);
 const serverTypes = ref([
@@ -445,6 +457,122 @@ onMounted(async () => {
   //   publicitySocket.value.onopen = handleOpenPub;
   // }
 });
+
+ const getCurrentTrack = async (
+  historyTrack: any,
+  items: any,
+  currentTrack: any
+) => {
+  const playerServerType = radioStore.currentRadio.server_type;
+  //localStorage.getItem("playerServerType");
+  const playerUrlApi = radioStore.currentRadio.url_api_radio_current_song;
+  //localStorage.getItem("playerUrlApi");
+  const playerUrlApiHistory = radioStore.currentRadio.url_api_radio_history;
+  //localStorage.getItem("playerUrlApiHistory");
+
+  try {
+    if (!playerServerType || !playerUrlApi || !playerUrlApiHistory) {
+      console.error("Missing required parameters");
+      return;
+    }
+
+    // const fetchDataAndSetInterval = async () => {
+    //   await fetchAndProcessRadioData(playerUrlApi);
+    //   setInterval(async () => {
+    //     await fetchAndProcessRadioData(playerUrlApi);
+    //   }, 30000);
+    // };
+
+    switch (playerServerType) {
+      case "shoutcast":
+      case "icecast":
+      case "everestcast":
+      case "everestpanel":
+      case "rcast":
+      case "centovacast":
+      case "azuracast":
+      case "radioking":
+        await fetchAndProcessRadioData(playerUrlApi);
+        await getHistoryTracks(playerUrlApiHistory, playerServerType);
+        break;
+      default:
+        console.error("Invalid player server type");
+        break;
+    }
+  } catch (error) {
+    console.error("Error occurred:", error);
+  }
+};
+
+
+const fetchAndProcessRadioData = async (url: string) => {
+    let currentTrack: any = {}; // Create an empty object for currentTrack
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = radioStore.currentRadio.server_type !== 'shoutcast' ? await response.json() : null;
+
+        switch (radioStore.currentRadio.server_type) {
+            case 'icecast':
+                currentTrack = JSON.parse(JSON.stringify(data?.icestats.source[0], null, 2));
+                console.log('++++++', currentTrack);
+                break;
+            case 'rcast':
+                currentTrack = {
+                    "title": JSON.parse(JSON.stringify(data?.nowplaying, null, 2)),
+                    "img_medium_url": JSON.parse(JSON.stringify(data?.coverart, null, 2))
+                };
+               // console.log('++++++', currentTrack);
+                break;
+            case 'centovacast':
+                currentTrack = {
+                    "title": JSON.parse(JSON.stringify(data?.data[0].track.title, null, 2)),
+                    "album": JSON.parse(JSON.stringify(data?.data[0].track.album, null, 2)),
+                    "author": JSON.parse(JSON.stringify(data?.data[0].track.artist, null, 2)),
+                    "img_medium_url": JSON.parse(JSON.stringify(data?.data[0].track.imageurl, null, 2)),
+                };
+                break;
+            case 'azuracast':
+                currentTrack = {
+                    "title": JSON.parse(JSON.stringify(data?.now_playing.song.title, null, 2)),
+                    "album": JSON.parse(JSON.stringify(data?.now_playing.song.album, null, 2)),
+                    "author": JSON.parse(JSON.stringify(data?.now_playing.song.artist, null, 2)),
+                    "img_medium_url": JSON.parse(JSON.stringify(data?.now_playing.song.art, null, 2)),
+                };
+                // console.log('++++++', currentTrack);
+                break;
+            case 'radioking':
+                currentTrack = {
+                    "title": JSON.parse(JSON.stringify(data[0].title, null, 2)),
+                    "album": JSON.parse(JSON.stringify(data[0].album, null, 2)),
+                    "author": JSON.parse(JSON.stringify(data[0].artist, null, 2)),
+                    "img_medium_url": JSON.parse(JSON.stringify(data[0].cover_url, null, 2)),
+                }; 
+                break;
+            case 'everestcast':
+                currentTrack = {
+                    "title": data.results[0].title,
+                    "album": data.results[0].album,
+                    "author": data.results[0].author,
+                    "img_medium_url": data.results[0].img_url,
+                }; 
+                break;
+
+            case 'shoutcast':
+                currentTrack = { "title": await response.text() }; 
+                break;
+            default:
+                break;
+        }
+        //getColorImg(currentTrack.img_medium_url);
+        return currentTrack; // Return the currentTrack object
+    } catch (error) {
+        console.error('Fetch failed:', error);
+    }
+};
 
 onUnmounted(() => {
   if (sound) {
