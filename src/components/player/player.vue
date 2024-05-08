@@ -28,25 +28,13 @@ console.log("+++", currentTrack, historyTrack);
 const route = useRoute();
 const router = useRouter();
 onBeforeMount(() => {
-  radioStore.radioToken = route.query.route_access_token
-  radioStore.radioName = route.query.route_radio_name
-  // if (localStorage.getItem("access-token") !== undefined) {
-  //   return;
-  // } 
-  
-  localStorage.setItem("access-token",
-    route.query.route_access_token
-  );
-});
-
-onMounted(async () => {
-  //await router.replace(window.location.pathname);
-  // Fetch metadata when the component is mounted
-  const route = useRoute();
-  const radio_name = route.path;
-  process.env.VUE_APP_PWA_NAME = radio_name;
-  radioStore.radioName = radio_name;
-  await getRadioByName(radio_name);
+  let token = route.query.route_access_token as string
+  if(!!token){
+    localStorage.setItem("access-token", token);
+  } else {
+    token = localStorage.getItem("access-token")!; 
+  }
+  radioStore.radioToken = token
 });
 
 
@@ -421,16 +409,21 @@ const loading = ref(true);
 
 onMounted(async () => {
 
-  // Fetch metadata when the component is mounted
-  const route = useRoute();
+  // Fetch metadata when the component is mounted 
   //const { route_access_token, route_current_radio_id, route_url_api_radio_history, route_url_api_radio, route_url_flux_radio, route_server_type } = route.query;
+  
+  const route = useRoute();
 
-  const radio_name = route.params.radio_name as string;
-  await getRadioByName(radio_name);
-
-  if (radio_name !== undefined) {
+  let radio_name = route.params.radio_name as string;
+  let radioSet = !!radio_name
+  if (radioSet) {
     localStorage.setItem("radio_name", radio_name);
+  } else {
+    radio_name = localStorage.getItem("radio_name")!
   }
+  document.title = radio_name;
+  radioStore.radioName = radio_name;
+  await getRadioByName(radio_name);
 
   loading.value = true;
 
