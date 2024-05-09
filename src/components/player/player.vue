@@ -14,6 +14,7 @@ import InstallButton from "./installButton.vue";
 import { getHistoryTracks } from "./historyFetcher";
 import { getImgTrack } from "./imageUtils";
 import { useRadioStore } from '@/store/radioStore';
+// import install from "@/services/installPrompt"
 
 const radioStore = useRadioStore();
 const chatSocket = ref<WebSocket | null>(null);
@@ -48,10 +49,10 @@ const getRadioByName = async (radioName: string) => {
     const response = await axios.get(
       `https://admin.radiowebapp.com/api/radios/name/${radioName}`,
       {
-        headers: {
-          //'Authorization': `Ekila ${localStorage.getItem("access-token")}`
-          Authorization: `Ekila ${localStorage.getItem("access-token")}`,
-        },
+        // headers: {
+        //   //'Authorization': `Ekila ${localStorage.getItem("access-token")}`
+        //   Authorization: `Ekila ${localStorage.getItem("access-token")}`,
+        // },
       }
     );
 
@@ -819,14 +820,7 @@ onUnmounted(() => {
             <!-- <img :src="currentTrack.img_large_url || img" v-if="server_type === 'shoutcast'" alt=""
                         class="rounded-lg h-60"> -->
 
-            <img :src="icecastImgUrl || img" v-if="server_type === 'icecast'" alt="" class="w-full h-60 rounded-lg" />
-            <img :src="icecastImgUrl || img" v-if="server_type === 'shoutcast'" alt="" class="w-full h-60 rounded-lg" />
-            <img :src="currentTrack.img_medium_url || img" v-if="server_type === 'everestcast' ||
-    server_type === 'rcast' ||
-    server_type === 'centovacast' ||
-    server_type === 'radioking' ||
-    server_type === 'azuracast'
-    " alt="" class="w-full h-60 rounded-lg" />
+                        <img :src="currentTrack.img_medium_url || img || icecastImgUrl" alt="" class="w-full h-32 rounded-lg" />
 
             <h1 class="mt-4 text-white text-left text-sm bg-gray-400 m-1 p-1">
               {{ currentTrack.title }}

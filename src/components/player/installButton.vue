@@ -37,8 +37,8 @@ declare global {
       });
   
       const installPWA = async () => { 
+        alert('installé la pwa')
         if (!deferredPrompt) return;
-        alert('install')
         deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
         if (outcome === 'accepted') {
