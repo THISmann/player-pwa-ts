@@ -22,7 +22,7 @@ const publicitySocket = ref<WebSocket | null>(null);
 
 const currentTrack = ref([]);
 const historyTrack = ref([]);
-const icecastImgUrl = ref(""); 
+const icecastImgUrl = ref("");
 console.log("+++", currentTrack, historyTrack);
 
 
@@ -30,10 +30,10 @@ const route = useRoute();
 const router = useRouter();
 onBeforeMount(() => {
   let token = route.query.route_access_token as string
-  if(!!token){
+  if (!!token) {
     localStorage.setItem("access-token", token);
   } else {
-    token = localStorage.getItem("access-token")!; 
+    token = localStorage.getItem("access-token")!;
   }
   radioStore.radioToken = token
 });
@@ -61,6 +61,10 @@ const getRadioByName = async (radioName: string) => {
 
     if (responseData) {
       radioStore.currentRadio = responseData;
+      // Assuming responseData.url_flux_radio is of type string
+
+      // Assign the value to the ref
+      STREAMING_LINK.value = responseData.url_flux_radio;
       // localStorage.setItem("playerServerType", responseData.server_type);
       // localStorage.setItem("playerUrlFlux", responseData.url_flux_radio);
       // localStorage.setItem(
@@ -221,47 +225,25 @@ const handleOpenPub = () => {
 
 const play = ref(true);
 const playMobile = ref(true);
-const STREAMING_LINK = radioStore.currentRadio.url_flux_radio;
-// localStorage.getItem("playerUrlFlux");
-const sound = new Howl({
-  src: [STREAMING_LINK],
-  autoplay: true,
-  loop: false,
-  volume: 1.0,
-  html5: true,
-});
-const fluxData = ref({
-  loading: true,
-});
+const STREAMING_LINK = ref<string>(''); 
+const audioElement = ref<HTMLAudioElement | null>(null);
 
-//window.location.reload();
+function togglePlay() {
+  if (audioElement.value) {
+    const shouldPlay = !isPlaying.value;
+    if (audioElement.value.paused) {
+      audioElement.value.play();
+    } else {
+      audioElement.value.pause();
+    }
+    play.value = shouldPlay;
+    playMobile.value = shouldPlay;
+    isPlaying.value = shouldPlay;
+  }
 
-// Clear listener after first call.
-const loadFlux = ref(true);
-// sound.once("load", function () {
-//   loadFlux.value = false;
-//   console.log("chargement");
-//   sound.play(); 
-// });
+}
 
-// // Fires when the sound finishes playing.
-// sound.on("end", function () {
-//   console.log("Finished!");
-// });
-
-// Listen for the 'loaderror' event on the Howl object
-sound.on("loaderror", (id, error) => { 
-  console.error("Load error:", error, "in the following Id ", id);
-  alert(  "flux radio instable actuellement");
-  // Handle the error, e.g., show a message to the user
-});
-
-// Listen for the 'loaderror' event on the Howl object
-sound.on("playerror", (error) => { 
-  console.error("player error:", error);
-  alert(error);
-  // Handle the error, e.g., show a message to the user
-});
+ 
 
 // Create a generic useModal function
 const createUseModal = (component: any, title: string) => {
@@ -318,10 +300,10 @@ const togglePlayback = () => {
   const shouldPlay = !isPlaying.value;
   if (shouldPlay) {
     sound.pause();
-   
+
   } else {
     sound.play();
- 
+
   }
   play.value = shouldPlay;
   playMobile.value = shouldPlay;
@@ -412,7 +394,7 @@ onMounted(async () => {
 
   // Fetch metadata when the component is mounted 
   //const { route_access_token, route_current_radio_id, route_url_api_radio_history, route_url_api_radio, route_url_flux_radio, route_server_type } = route.query;
-  
+
   const route = useRoute();
 
   let radio_name = route.params.radio_name as string;
@@ -431,28 +413,42 @@ onMounted(async () => {
   await getAdvert();
   setInterval(showNextAdvert, 10000);
 
-  // chatSocket.value = new WebSocket(
-  //   "wss://www.admin.radiowebapp.com:443/sync/ws/radio/?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzExNjkwMjM1LCJpYXQiOjE3MTE2ODY2MzUsImp0aSI6ImE5ZTAwZmE2NDdmZTQ4OGRiMGY5YzI2Y2RmZmQ5NWM5IiwidXNlcl9pZCI6Mn0.UQ_IBTGCUG5_S0c_7gfvV5_2dVzwWoiIAae7N-jmXRM"
-  // );
-
-  // publicitySocket.value = new WebSocket(
-  //   "wss://www.admin.radiowebapp.com:443/sync/ws/publicity/?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzExNjkwMjM1LCJpYXQiOjE3MTE2ODY2MzUsImp0aSI6ImE5ZTAwZmE2NDdmZTQ4OGRiMGY5YzI2Y2RmZmQ5NWM5IiwidXNlcl9pZCI6Mn0.UQ_IBTGCUG5_S0c_7gfvV5_2dVzwWoiIAae7N-jmXRM"
-  // );
-
-  // if (chatSocket.value) {
-  //   chatSocket.value.onmessage = handleMessage;
-  //   chatSocket.value.onclose = handleClose;
-  //   chatSocket.value.onopen = handleOpen;
-  // }
-
-  // if (publicitySocket.value) {
-  //   publicitySocket.value.onmessage = handleMessagePub;
-  //   publicitySocket.value.onclose = handleClosePub;
-  //   publicitySocket.value.onopen = handleOpenPub;
-  // }
+  // Check if the audio element is already playing or paused
+  if (audioElement.value) {
+    if (audioElement.value.paused) {
+      console.log("Audio is paused. You might want to start playing.");
+      // Optionally, start playing the audio here
+      audioElement.value.play();
+    } else {
+      console.log("Audio is currently playing.");
+      // Optionally, pause the audio here
+      audioElement.value.pause();
+    }
+  }
 });
 
- const getCurrentTrack = async (
+// chatSocket.value = new WebSocket(
+//   "wss://www.admin.radiowebapp.com:443/sync/ws/radio/?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzExNjkwMjM1LCJpYXQiOjE3MTE2ODY2MzUsImp0aSI6ImE5ZTAwZmE2NDdmZTQ4OGRiMGY5YzI2Y2RmZmQ5NWM5IiwidXNlcl9pZCI6Mn0.UQ_IBTGCUG5_S0c_7gfvV5_2dVzwWoiIAae7N-jmXRM"
+// );
+
+// publicitySocket.value = new WebSocket(
+//   "wss://www.admin.radiowebapp.com:443/sync/ws/publicity/?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzExNjkwMjM1LCJpYXQiOjE3MTE2ODY2MzUsImp0aSI6ImE5ZTAwZmE2NDdmZTQ4OGRiMGY5YzI2Y2RmZmQ5NWM5IiwidXNlcl9pZCI6Mn0.UQ_IBTGCUG5_S0c_7gfvV5_2dVzwWoiIAae7N-jmXRM"
+// );
+
+// if (chatSocket.value) {
+//   chatSocket.value.onmessage = handleMessage;
+//   chatSocket.value.onclose = handleClose;
+//   chatSocket.value.onopen = handleOpen;
+// }
+
+// if (publicitySocket.value) {
+//   publicitySocket.value.onmessage = handleMessagePub;
+//   publicitySocket.value.onclose = handleClosePub;
+//   publicitySocket.value.onopen = handleOpenPub;
+// }
+//});
+
+const getCurrentTrack = async (
   historyTrack: any,
   items: any,
   currentTrack: any
@@ -500,82 +496,75 @@ onMounted(async () => {
 
 
 const fetchAndProcessRadioData = async (url: string) => {
-    let currentTrack: any = {}; // Create an empty object for currentTrack
-    try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = radioStore.currentRadio.server_type !== 'shoutcast' ? await response.json() : null;
-
-        switch (radioStore.currentRadio.server_type) {
-            case 'icecast':
-                currentTrack = JSON.parse(JSON.stringify(data?.icestats.source[0], null, 2));
-                console.log('++++++', currentTrack);
-                break;
-            case 'rcast':
-                currentTrack = {
-                    "title": JSON.parse(JSON.stringify(data?.nowplaying, null, 2)),
-                    "img_medium_url": JSON.parse(JSON.stringify(data?.coverart, null, 2))
-                };
-               // console.log('++++++', currentTrack);
-                break;
-            case 'centovacast':
-                currentTrack = {
-                    "title": JSON.parse(JSON.stringify(data?.data[0].track.title, null, 2)),
-                    "album": JSON.parse(JSON.stringify(data?.data[0].track.album, null, 2)),
-                    "author": JSON.parse(JSON.stringify(data?.data[0].track.artist, null, 2)),
-                    "img_medium_url": JSON.parse(JSON.stringify(data?.data[0].track.imageurl, null, 2)),
-                };
-                break;
-            case 'azuracast':
-                currentTrack = {
-                    "title": JSON.parse(JSON.stringify(data?.now_playing.song.title, null, 2)),
-                    "album": JSON.parse(JSON.stringify(data?.now_playing.song.album, null, 2)),
-                    "author": JSON.parse(JSON.stringify(data?.now_playing.song.artist, null, 2)),
-                    "img_medium_url": JSON.parse(JSON.stringify(data?.now_playing.song.art, null, 2)),
-                };
-                // console.log('++++++', currentTrack);
-                break;
-            case 'radioking':
-                currentTrack = {
-                    "title": JSON.parse(JSON.stringify(data[0].title, null, 2)),
-                    "album": JSON.parse(JSON.stringify(data[0].album, null, 2)),
-                    "author": JSON.parse(JSON.stringify(data[0].artist, null, 2)),
-                    "img_medium_url": JSON.parse(JSON.stringify(data[0].cover_url, null, 2)),
-                }; 
-                break;
-            case 'everestcast':
-                currentTrack = {
-                    "title": data.results[0].title,
-                    "album": data.results[0].album,
-                    "author": data.results[0].author,
-                    "img_medium_url": data.results[0].img_url,
-                }; 
-                break;
-
-            case 'shoutcast':
-                currentTrack = { "title": await response.text() }; 
-                break;
-            default:
-                break;
-        }
-        //getColorImg(currentTrack.img_medium_url);
-        return currentTrack; // Return the currentTrack object
-    } catch (error) {
-        console.error('Fetch failed:', error);
+  let currentTrack: any = {}; // Create an empty object for currentTrack
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+
+    const data = radioStore.currentRadio.server_type !== 'shoutcast' ? await response.json() : null;
+
+    switch (radioStore.currentRadio.server_type) {
+      case 'icecast':
+        currentTrack = JSON.parse(JSON.stringify(data?.icestats.source[0], null, 2));
+        console.log('++++++', currentTrack);
+        break;
+      case 'rcast':
+        currentTrack = {
+          "title": JSON.parse(JSON.stringify(data?.nowplaying, null, 2)),
+          "img_medium_url": JSON.parse(JSON.stringify(data?.coverart, null, 2))
+        };
+        // console.log('++++++', currentTrack);
+        break;
+      case 'centovacast':
+        currentTrack = {
+          "title": JSON.parse(JSON.stringify(data?.data[0].track.title, null, 2)),
+          "album": JSON.parse(JSON.stringify(data?.data[0].track.album, null, 2)),
+          "author": JSON.parse(JSON.stringify(data?.data[0].track.artist, null, 2)),
+          "img_medium_url": JSON.parse(JSON.stringify(data?.data[0].track.imageurl, null, 2)),
+        };
+        break;
+      case 'azuracast':
+        currentTrack = {
+          "title": JSON.parse(JSON.stringify(data?.now_playing.song.title, null, 2)),
+          "album": JSON.parse(JSON.stringify(data?.now_playing.song.album, null, 2)),
+          "author": JSON.parse(JSON.stringify(data?.now_playing.song.artist, null, 2)),
+          "img_medium_url": JSON.parse(JSON.stringify(data?.now_playing.song.art, null, 2)),
+        };
+        // console.log('++++++', currentTrack);
+        break;
+      case 'radioking':
+        currentTrack = {
+          "title": JSON.parse(JSON.stringify(data[0].title, null, 2)),
+          "album": JSON.parse(JSON.stringify(data[0].album, null, 2)),
+          "author": JSON.parse(JSON.stringify(data[0].artist, null, 2)),
+          "img_medium_url": JSON.parse(JSON.stringify(data[0].cover_url, null, 2)),
+        };
+        break;
+      case 'everestcast':
+        currentTrack = {
+          "title": data.results[0].title,
+          "album": data.results[0].album,
+          "author": data.results[0].author,
+          "img_medium_url": data.results[0].img_url,
+        };
+        break;
+
+      case 'shoutcast':
+        currentTrack = { "title": await response.text() };
+        break;
+      default:
+        break;
+    }
+    //getColorImg(currentTrack.img_medium_url);
+    return currentTrack; // Return the currentTrack object
+  } catch (error) {
+    console.error('Fetch failed:', error);
+  }
 };
 
-onUnmounted(() => {
-  if (sound) {
-    sound.stop(); // Arrêtez le son
-    sound.unload(); // Déchargez la ressource audio
-  }
 
-  
-});
 </script>
 
 <template>
@@ -583,7 +572,7 @@ onUnmounted(() => {
     <div class="container-fluid m-0 p-2">
       <div class="container-fluid max-md:hidden min-h-screen">
         <ModalsContainer />
-        <BluetoothModal :show="modal1.isOpen" @close="modal1.close" />  
+        <BluetoothModal :show="modal1.isOpen" @close="modal1.close" />
         <div class="grid grid-cols-12">
           <div class="col-span-9 bg-slate-100/25 rounded-lg m-1">
             <div v-for="advert in advertLists" :key="advert.id" v-show="advert === currentAdvert"
@@ -680,17 +669,8 @@ onUnmounted(() => {
               <div id="cardPlayer" class="p-1 m-1 bg-gray-200 rounded-lg">
 
                 <div>
-                  <!-- <video controls autoplay>
-                    <source :srcObject="STREAMING_LINK" type="audio/mpeg">
-                  </video> -->
-                  <!-- <video :srcObject="STREAMING_LINK"   autoplay></video> -->
-                  <!-- <img :src="icecastImgUrl || img" v-if="server_type === 'icecast'"
-                                        class="max-md:w-48 max-md:h-28" alt="" srcset="">
-                                    <img :src="icecastImgUrl || img" v-if="server_type === 'shoutcast'"
-                                        class="max-md:w-48 max-md:h-28" alt="" srcset="">
-                                    <img :src="currentTrack.img_medium_url || img"
-                                        v-if="server_type === 'everestcast' || server_type === 'rcast' || server_type === 'centovacast' || server_type === 'radioking' || server_type === 'azuracast'"
-                                        class="max-md:w-14 md:w-20 md:h-20 max-md:h-14" alt="" srcset=""> -->
+
+                  <audio :src="STREAMING_LINK" ref="audioElement"></audio>
                   <img :src="currentTrack.img_medium_url || img || icecastImgUrl"
                     class="max-md:w-14 md:w-20 md:h-20 max-md:h-14" alt="" srcset="" />
                 </div>
@@ -733,7 +713,7 @@ onUnmounted(() => {
               <div v-if="play" class="mt-2 h-2 w-full bg-gray-200 dark:bg-gray-600"></div>
             </div>
             <div class="mt-3 mx-80">
-              <Vbutton v-if="play" @click="togglePlayback">
+              <Vbutton v-if="play" @click="togglePlay">
                 <svg class="fill-white" width="44px" height="44px" viewBox="0 0 24 24" fill="none"
                   xmlns="http://www.w3.org/2000/svg" stroke="#ffffff">
                   <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
@@ -746,7 +726,7 @@ onUnmounted(() => {
                 </svg>
               </Vbutton>
 
-              <VButton v-if="!play" @click="togglePlayback">
+              <VButton v-if="!play" @click="togglePlay">
                 <svg class="fill-white" width="44px" height="44px" viewBox="0 0 24 24" fill="none"
                   xmlns="http://www.w3.org/2000/svg">
                   <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
@@ -769,7 +749,7 @@ onUnmounted(() => {
               <div class="flex ml-12 mb-4" id="controlOption">
                 <VButton class="m-1">
                 </VButton>
-                  <!-- <VButton class="m-1">
+                <!-- <VButton class="m-1">
                   <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
                     <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
@@ -820,7 +800,7 @@ onUnmounted(() => {
             <!-- <img :src="currentTrack.img_large_url || img" v-if="server_type === 'shoutcast'" alt=""
                         class="rounded-lg h-60"> -->
 
-                        <img :src="currentTrack.img_medium_url || img || icecastImgUrl" alt="" class="w-full h-32 rounded-lg" />
+            <img :src="currentTrack.img_medium_url || img || icecastImgUrl" alt="" class="w-full h-32 rounded-lg" />
 
             <h1 class="mt-4 text-white text-left text-sm bg-gray-400 m-1 p-1">
               {{ currentTrack.title }}
@@ -877,7 +857,7 @@ onUnmounted(() => {
           <div v-if="playMobile" class="mt-2 h-1 w-full bg-gray-400 dark:bg-neutral-600"></div>
         </div>
         <div class="mx-40 mt-3">
-          <VButton v-if="playMobile" @click="togglePlayback">
+          <VButton v-if="playMobile" @click="togglePlay">
             <svg width="64px" height="64px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
               <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
@@ -889,7 +869,7 @@ onUnmounted(() => {
             </svg>
           </VButton>
 
-          <VButton v-if="!playMobile" @click="togglePlayback">
+          <VButton v-if="!playMobile" @click="togglePlay">
             <svg width="64px" height="64px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
               <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
