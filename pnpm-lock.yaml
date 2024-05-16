@@ -50,6 +50,9 @@ dependencies:
   pinia:
     specifier: ^2.1.7
     version: 2.1.7(typescript@4.5.5)(vue@3.4.19)
+  qrcode.vue:
+    specifier: ^3.4.1
+    version: 3.4.1(vue@3.4.19)
   qs:
     specifier: ^6.11.2
     version: 6.11.2
@@ -92,6 +95,9 @@ dependencies:
   vuex:
     specifier: ^4.1.0
     version: 4.1.0(vue@3.4.19)
+  wavesurfer.js:
+    specifier: ^7.7.13
+    version: 7.7.13
 
 devDependencies:
   '@pinia/testing':
@@ -106,6 +112,9 @@ devDependencies:
   '@tailwindcss/typography':
     specifier: ^0.5.10
     version: 0.5.10(tailwindcss@3.4.1)
+  '@types/howler':
+    specifier: ^2.2.11
+    version: 2.2.11
   '@types/jest':
     specifier: ^27.5.2
     version: 27.5.2
@@ -2176,6 +2185,10 @@ packages:
     resolution: {integrity: sha512-olP3sd1qOEe5dXTSaFvQG+02VdRXcdytWLAZsAq1PecU8uqQAhkrnbli7DagjtXKW/Bl7YJbUsa8MPcuc8LHEQ==}
     dependencies:
       '@types/node': 20.12.7
+    dev: true
+
+  /@types/howler@2.2.11:
+    resolution: {integrity: sha512-7aBoUL6RbSIrqKnpEgfa1wSNUBK06mn08siP2QI0zYk7MXfEJAaORc4tohamQYqCqVESoDyRWSdQn2BOKWj2Qw==}
     dev: true
 
   /@types/html-minifier-terser@6.1.0:
@@ -8732,6 +8745,14 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
+  /qrcode.vue@3.4.1(vue@3.4.19):
+    resolution: {integrity: sha512-wq/zHsifH4FJ1GXQi8/wNxD1KfQkckIpjK1KPTc/qwYU5/Bkd4me0w4xZSg6EXk6xLBkVDE0zxVagewv5EMAVA==}
+    peerDependencies:
+      vue: ^3.0.0
+    dependencies:
+      vue: 3.4.19(typescript@4.5.5)
+    dev: false
+
   /qs-stringify@1.2.1:
     resolution: {integrity: sha512-2N5xGLGZUxpgAYq1fD1LmBSCbxQVsXYt5JU0nU3FuPWO8PlCnKNFQwXkZgyB6mrTdg7IbexX4wxIR403dJw9pw==}
     dev: false
@@ -10575,6 +10596,10 @@ packages:
       glob-to-regexp: 0.4.1
       graceful-fs: 4.2.11
     dev: true
+
+  /wavesurfer.js@7.7.13:
+    resolution: {integrity: sha512-lQ5QkLa0Kzt5jkt4vP+K1RvsopaH5LssxZ3OArxaeetGYvQfot4Xq5UB8CRsJLXF0+hFWOmqc23WGhP64v2byQ==}
+    dev: false
 
   /wbuf@1.7.3:
     resolution: {integrity: sha512-O84QOnr0icsbFGLS0O3bI5FswxzRr8/gHwWkDlQFskhSPryQXvrTMxjxGP4+iWYoauLoBvfDpkrOauZ+0iZpDA==}

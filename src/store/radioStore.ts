@@ -9,6 +9,7 @@ export const useRadioStore = defineStore("radioStore", {
     currentRadio: {},
     radioName: "",
     radioToken: "",
+    radioFlux: "",
   }),
 
   getters: {
@@ -26,6 +27,9 @@ export const useRadioStore = defineStore("radioStore", {
     },
     printRadioToken(state){
       return state.radioToken;
+    },
+    printRadioFlux(state){
+      return state.radioFlux;
     }
   },
 

@@ -1,33 +1,20 @@
 <script setup lang="ts">
-import { onBeforeMount, onMounted, onUnmounted, ref } from "vue";
-import { Howl } from "howler";
-//import { useBluetooth } from '@vueuse/core'
+import { onBeforeMount, onMounted, onUnmounted, ref } from "vue"; 
 import { ModalsContainer, useModal } from "vue-final-modal";
 import BluetoothModal from "../bleutooth/BluetoothModal.vue";
-import axios from "axios";
-//import { useAdvertStore } from '@/store/advertStore';
+import axios from "axios"; 
 import img from "./logo.png";
 import themeColor from "./colorExtraction";
 import { useRoute, useRouter } from "vue-router";
-import InstallButton from "./installButton.vue";
-//import { fetchAndProcessRadioData } from "./fetchAndProcessRadioData";
-import { getHistoryTracks } from "./historyFetcher";
-import { getImgTrack } from "./imageUtils";
-import { useRadioStore } from '@/store/radioStore';
-// import install from "@/services/installPrompt"
+import InstallButton from "./installButton.vue"; 
+import { useRadioStore } from '@/store/radioStore'; 
 
 const radioStore = useRadioStore();
 const chatSocket = ref<WebSocket | null>(null);
 const publicitySocket = ref<WebSocket | null>(null);
+const historyTrack = ref([]); 
+const route = useRoute(); 
 
-const currentTrack = ref([]);
-const historyTrack = ref([]);
-const icecastImgUrl = ref("");
-console.log("+++", currentTrack, historyTrack);
-
-
-const route = useRoute();
-const router = useRouter();
 onBeforeMount(() => {
   let token = route.query.route_access_token as string
   if (!!token) {
@@ -38,21 +25,20 @@ onBeforeMount(() => {
   radioStore.radioToken = token
 });
 
-
-const getRadioByName = async (radioName: string) => {
+const getRadioMetaData = async (radioName: string) => {
   try {
     if (!radioName) {
       console.error("Radio name is missing in localStorage");
       return;
     }
 
-    const response = await axios.get(
-      `https://admin.radiowebapp.com/api/radios/name/${radioName}`,
+    const response = await axios.get( 
+      `http://localhost:8030/api/radios/metadata/${radioName}`,
       {
-        // headers: {
-        //   //'Authorization': `Ekila ${localStorage.getItem("access-token")}`
-        //   Authorization: `Ekila ${localStorage.getItem("access-token")}`,
-        // },
+        headers: {
+          //'Authorization': `Ekila ${localStorage.getItem("access-token")}`
+          //Authorization: `Ekila ${localStorage.getItem("access-token")}`,
+        },
       }
     );
 
@@ -60,102 +46,20 @@ const getRadioByName = async (radioName: string) => {
     const responseData = response.data;
 
     if (responseData) {
-      radioStore.currentRadio = responseData;
-      // Assuming responseData.url_flux_radio is of type string
-
-      // Assign the value to the ref
-      STREAMING_LINK.value = responseData.url_flux_radio;
-      // localStorage.setItem("playerServerType", responseData.server_type);
-      // localStorage.setItem("playerUrlFlux", responseData.url_flux_radio);
-      // localStorage.setItem(
-      //   "playerUrlApi",
-      //   responseData.url_api_radio_current_song
-      // );
-      // localStorage.setItem(
-      //   "playerUrlApiHistory",
-      //   responseData.url_api_radio_history
-      // );
-      // localStorage.setItem("playerRadioID", responseData.id);
+      STREAMING_LINK.value = responseData.radio_flux
+      radioStore.currentRadio = responseData; 
     }
-
-    // Call updateBackgroundColor immediately
-    updateMetadata();
-
-    // Update every 2 minutes
-    setInterval(updateMetadata, 1 * 60 * 1000); // 2 minutes in milliseconds
-
     console.log("history", historyTrack.value);
-  } catch (error) {
-    console.error("Failed to fetch radios:", error.message);
-    if (error.response && error.response.status === 401) {
-      // Handle unauthorized access
-      console.error("Unauthorized access:", error.response.data);
-    } else {
+  } catch (error) { 
       // Handle other errors
-      console.error("other error:", error);
-    }
+      console.error("other error:", error); 
   }
-};
-
-const updateMetadata = async () => {
-  //localStorage.getItem("playerServerType") 
-  switch (radioStore.currentRadio.server_type) {
-    case "icecast":
-      return currentTrack.value = {
-        title: "indisponible",
-        album: "indisponible",
-        author: "indisponible",
-        img_medium_url: "",
-      };
-    case "shoutcast":
-      return currentTrack.value = {
-        title: "indisponible",
-        album: "indisponible",
-        author: "indisponible",
-        img_medium_url: "",
-      };
-      // currentTrack.value = await fetchAndProcessRadioData(
-      //   localStorage.getItem("playerUrlApi")
-      // );
-
-      // icecastImgUrl.value = await getImgTrack(currentTrack.value.title);
-      // alert("radio ")
-      // getColorImg(icecastImgUrl.value, (bgColor) => {
-      //   console.log("Background color:", bgColor);
-      // });
-      break;
-    case "rcast":
-    case "radioking":
-    case "everestcast":
-    case "everestpanel":
-      return currentTrack.value = {
-        title: "indisponible",
-        album: "indisponible",
-        author: "indisponible",
-        img_medium_url: "",
-      };
-    case "azuracast":
-    case "centovacast":
-      currentTrack.value = await fetchAndProcessRadioData(
-        //localStorage.getItem("playerUrlApi")
-        radioStore.currentRadio.url_api_radio_current_song
-      );
-      getColorImg(currentTrack.value.img_medium_url, (bgColor) => {
-        console.log("Background color:", bgColor);
-      });
-      historyTrack.value = await getHistoryTracks(
-        // localStorage.getItem("playerUrlApiHistory"),
-        // localStorage.getItem("playerServerType")
-        radioStore.currentRadio.url_api_radio_history,
-        radioStore.currentRadio.server_type
-      );
-      break;
-  }
-};
-
-// setInterval(async () => {
-//     await updateMetadata();
-// }, 3000);
+}
+ 
+// Update every minute
+setInterval(() => {
+  getRadioMetaData(radioStore.radioName);
+}, 1 * 60 * 1000);
 
 // Function to handle WebSocket messages
 const handleMessage = (e: MessageEvent) => {
@@ -165,19 +69,11 @@ const handleMessage = (e: MessageEvent) => {
   if (radioStore.currentRadio.id == data.radio.id) {
     switch (data.action) {
       case "update":
-        console.log("mise a jour");
-        console.log(data.radio);
-        localStorage.setItem("playerServerType", data.radio.server_type);
-        localStorage.setItem("playerUrlFlux", data.radio.flux_radio);
-        localStorage.setItem("playerUrlApi", data.radio.url_api_radio);
-        localStorage.setItem(
-          "playerUrlApiHistory",
-          data.radio.url_api_radio_history
-        );
+        console.log("mise a jour"); 
+        
         break;
       case "delete":
-        console.log("suppression");
-        console.log(data.radio);
+        console.log("suppression"); 
         break;
     }
   }
@@ -227,6 +123,7 @@ const play = ref(true);
 const playMobile = ref(true);
 const STREAMING_LINK = ref<string>(''); 
 const audioElement = ref<HTMLAudioElement | null>(null);
+const isPlaying = ref(false);
 
 function togglePlay() {
   if (audioElement.value) {
@@ -240,7 +137,6 @@ function togglePlay() {
     playMobile.value = shouldPlay;
     isPlaying.value = shouldPlay;
   }
-
 }
 
  
@@ -276,49 +172,9 @@ const createUseModal = (component: any, title: string) => {
 const modal1 = createUseModal(BluetoothModal, "Bluetooth settings");
 const openModal1 = async () => await modal1.open();
 
-const server_type = radioStore.currentRadio.server_type;
-//ref(localStorage.getItem("playerServerType"));
-const isPlaying = ref(false);
-const volume = ref(1.0);
-const serverTypes = ref([
-  "icecast",
-  "shoutcast",
-  "everestcast",
-  "everestpanel",
-  "rcast",
-  "centovacast",
-  "azuracast",
-  "radiocast",
-  "radioking",
-]);
-
-const updateVolume = () => {
-  sound.volume(volume.value);
-};
-
-const togglePlayback = () => {
-  const shouldPlay = !isPlaying.value;
-  if (shouldPlay) {
-    sound.pause();
-
-  } else {
-    sound.play();
-
-  }
-  play.value = shouldPlay;
-  playMobile.value = shouldPlay;
-  isPlaying.value = shouldPlay;
-};
-
 const currentBgColor = ref("");
 
-const logToServer = async (level: string, message: string) => {
-  try {
-    await axios.post("http://localhost:3000/logs", { level, message });
-  } catch (error) {
-    console.error("Error sending log to server:", error);
-  }
-};
+ 
 
 const getColorImg = (source: string) => {
   const img = new Image();
@@ -347,8 +203,7 @@ const getAdvert = async () => {
       .get(`https://admin.radiowebapp.com/api/publicities/`, {
         headers: {
           'Authorization': `Ekila ${localStorage.getItem("access-token")}`,
-          // Authorization:
-          //   "Ekila eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzEzMjgwMTAyLCJpYXQiOjE3MTMyNzY1MDIsImp0aSI6IjJhZTE1ODAyZGJiNTQxZDM5NGNhYmMyNjA3ZWU2ZThjIiwidXNlcl9pZCI6Mn0.aNVuLfNuEoPeChZjoWAkje0oP5_N1yXXCF4zZSOdLGI",
+          // Authorization: 
           "Content-Type": "application/json",
         },
       })
@@ -406,163 +261,14 @@ onMounted(async () => {
   }
   document.title = radio_name;
   radioStore.radioName = radio_name;
-  await getRadioByName(radio_name);
+  await getRadioMetaData(radio_name);
 
   loading.value = true;
 
   await getAdvert();
   setInterval(showNextAdvert, 10000);
 
-  // Check if the audio element is already playing or paused
-  if (audioElement.value) {
-    if (audioElement.value.paused) {
-      console.log("Audio is paused. You might want to start playing.");
-      // Optionally, start playing the audio here
-      audioElement.value.play();
-    } else {
-      console.log("Audio is currently playing.");
-      // Optionally, pause the audio here
-      audioElement.value.pause();
-    }
-  }
 });
-
-// chatSocket.value = new WebSocket(
-//   "wss://www.admin.radiowebapp.com:443/sync/ws/radio/?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzExNjkwMjM1LCJpYXQiOjE3MTE2ODY2MzUsImp0aSI6ImE5ZTAwZmE2NDdmZTQ4OGRiMGY5YzI2Y2RmZmQ5NWM5IiwidXNlcl9pZCI6Mn0.UQ_IBTGCUG5_S0c_7gfvV5_2dVzwWoiIAae7N-jmXRM"
-// );
-
-// publicitySocket.value = new WebSocket(
-//   "wss://www.admin.radiowebapp.com:443/sync/ws/publicity/?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzExNjkwMjM1LCJpYXQiOjE3MTE2ODY2MzUsImp0aSI6ImE5ZTAwZmE2NDdmZTQ4OGRiMGY5YzI2Y2RmZmQ5NWM5IiwidXNlcl9pZCI6Mn0.UQ_IBTGCUG5_S0c_7gfvV5_2dVzwWoiIAae7N-jmXRM"
-// );
-
-// if (chatSocket.value) {
-//   chatSocket.value.onmessage = handleMessage;
-//   chatSocket.value.onclose = handleClose;
-//   chatSocket.value.onopen = handleOpen;
-// }
-
-// if (publicitySocket.value) {
-//   publicitySocket.value.onmessage = handleMessagePub;
-//   publicitySocket.value.onclose = handleClosePub;
-//   publicitySocket.value.onopen = handleOpenPub;
-// }
-//});
-
-const getCurrentTrack = async (
-  historyTrack: any,
-  items: any,
-  currentTrack: any
-) => {
-  const playerServerType = radioStore.currentRadio.server_type;
-  //localStorage.getItem("playerServerType");
-  const playerUrlApi = radioStore.currentRadio.url_api_radio_current_song;
-  //localStorage.getItem("playerUrlApi");
-  const playerUrlApiHistory = radioStore.currentRadio.url_api_radio_history;
-  //localStorage.getItem("playerUrlApiHistory");
-
-  try {
-    if (!playerServerType || !playerUrlApi || !playerUrlApiHistory) {
-      console.error("Missing required parameters");
-      return;
-    }
-
-    // const fetchDataAndSetInterval = async () => {
-    //   await fetchAndProcessRadioData(playerUrlApi);
-    //   setInterval(async () => {
-    //     await fetchAndProcessRadioData(playerUrlApi);
-    //   }, 30000);
-    // };
-
-    switch (playerServerType) {
-      case "shoutcast":
-      case "icecast":
-      case "everestcast":
-      case "everestpanel":
-      case "rcast":
-      case "centovacast":
-      case "azuracast":
-      case "radioking":
-        await fetchAndProcessRadioData(playerUrlApi);
-        await getHistoryTracks(playerUrlApiHistory, playerServerType);
-        break;
-      default:
-        console.error("Invalid player server type");
-        break;
-    }
-  } catch (error) {
-    console.error("Error occurred:", error);
-  }
-};
-
-
-const fetchAndProcessRadioData = async (url: string) => {
-  let currentTrack: any = {}; // Create an empty object for currentTrack
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = radioStore.currentRadio.server_type !== 'shoutcast' ? await response.json() : null;
-
-    switch (radioStore.currentRadio.server_type) {
-      case 'icecast':
-        currentTrack = JSON.parse(JSON.stringify(data?.icestats.source[0], null, 2));
-        console.log('++++++', currentTrack);
-        break;
-      case 'rcast':
-        currentTrack = {
-          "title": JSON.parse(JSON.stringify(data?.nowplaying, null, 2)),
-          "img_medium_url": JSON.parse(JSON.stringify(data?.coverart, null, 2))
-        };
-        // console.log('++++++', currentTrack);
-        break;
-      case 'centovacast':
-        currentTrack = {
-          "title": JSON.parse(JSON.stringify(data?.data[0].track.title, null, 2)),
-          "album": JSON.parse(JSON.stringify(data?.data[0].track.album, null, 2)),
-          "author": JSON.parse(JSON.stringify(data?.data[0].track.artist, null, 2)),
-          "img_medium_url": JSON.parse(JSON.stringify(data?.data[0].track.imageurl, null, 2)),
-        };
-        break;
-      case 'azuracast':
-        currentTrack = {
-          "title": JSON.parse(JSON.stringify(data?.now_playing.song.title, null, 2)),
-          "album": JSON.parse(JSON.stringify(data?.now_playing.song.album, null, 2)),
-          "author": JSON.parse(JSON.stringify(data?.now_playing.song.artist, null, 2)),
-          "img_medium_url": JSON.parse(JSON.stringify(data?.now_playing.song.art, null, 2)),
-        };
-        // console.log('++++++', currentTrack);
-        break;
-      case 'radioking':
-        currentTrack = {
-          "title": JSON.parse(JSON.stringify(data[0].title, null, 2)),
-          "album": JSON.parse(JSON.stringify(data[0].album, null, 2)),
-          "author": JSON.parse(JSON.stringify(data[0].artist, null, 2)),
-          "img_medium_url": JSON.parse(JSON.stringify(data[0].cover_url, null, 2)),
-        };
-        break;
-      case 'everestcast':
-        currentTrack = {
-          "title": data.results[0].title,
-          "album": data.results[0].album,
-          "author": data.results[0].author,
-          "img_medium_url": data.results[0].img_url,
-        };
-        break;
-
-      case 'shoutcast':
-        currentTrack = { "title": await response.text() };
-        break;
-      default:
-        break;
-    }
-    //getColorImg(currentTrack.img_medium_url);
-    return currentTrack; // Return the currentTrack object
-  } catch (error) {
-    console.error('Fetch failed:', error);
-  }
-};
 
 
 </script>
@@ -584,11 +290,12 @@ const fetchAndProcessRadioData = async (url: string) => {
                 <h1>{{ advert.description }}</h1>
               </marquee>
             </div>
+
             <div id="cards-section" class="">
               <div class="p-1 mx-7 flex flex-wrap overSVGRepo_iconCarrierflow-x-scroll hide-scrollbar">
-                <div v-for="data in historyTrack" :key="data.id"
+                <div v-for="data in radioStore.currentRadio.song_history" :key="data.title"
                   class="w-48 h-64 border-black-300/75 rounded-lg shadow-2xl px-4 m-1">
-                  <img :src="data.img_url" class="rounded-lg h-40" alt="" srcset="" />
+                  <img :src="data.cover" class="rounded-lg h-40" alt="" srcset="" />
                   <h1
                     class="text-left mx-1 text-md text-gray-100 bg-gray-500/25 p-1 mt-1 rounded-lg md:h-14 overflow-hidden overflow-ellipsis whitespace-nowrap">
                     {{ data.title }}
@@ -599,7 +306,7 @@ const fetchAndProcessRadioData = async (url: string) => {
           </div>
           <div class="col-span-3 bg-slate-100/25 rounded-lg m-1">
             <div class="m-6 p-1 rounded-lg bg-gray-200">
-              <img :src="currentTrack.img_medium_url || img || icecastImgUrl" alt="" class="w-full h-32 rounded-lg" />
+              <img :src="radioStore.currentRadio.cover" alt="" class="w-full h-32 rounded-lg" />
             </div>
             <div class="p-3">
               <hr class="my-1 h-0.5 border-t-0 bg-neutral-100 opacity-100 dark:opacity-50" />
@@ -607,7 +314,7 @@ const fetchAndProcessRadioData = async (url: string) => {
 
               <div>
                 <h4 class="text-white text-left m-1">
-                  {{ currentTrack.title }}
+                  {{ radioStore.currentRadio.title }}
                 </h4>
               </div>
 
@@ -617,7 +324,7 @@ const fetchAndProcessRadioData = async (url: string) => {
               </h1>
               <div>
                 <h4 class="text-white text-left m-1">
-                  {{ currentTrack.album }}
+                  {{ radioStore.currentRadio.album }}
                 </h4>
               </div>
 
@@ -625,39 +332,11 @@ const fetchAndProcessRadioData = async (url: string) => {
               <h1 class="text-white text-left m-1">Auteur</h1>
               <div>
                 <h4 class="text-white text-left m-1">
-                  {{ currentTrack.author }}
+                  {{ radioStore.currentRadio.artist_name }}
                 </h4>
               </div>
               <hr class="my-1 h-0.5 border-t-0 bg-neutral-100 opacity-100 dark:opacity-50" />
-              <h1 class="text-white text-left m-1">description</h1>
-
-              <div v-for="serverType in serverTypes" :key="serverType">
-                <h4 v-if="server_type === '' ||
-    (server_type === serverType && serverType === 'icecast')
-    " class="text-white text-left m-1">
-                  {{
-    currentTrack.server_description === null
-      ? "default"
-      : currentTrack.server_description
-  }}
-                </h4>
-                <h4 v-if="server_type === '' ||
-    (server_type === serverType && serverType === 'shoutcast')
-    " class="text-white text-left m-1">
-                  {{
-    currentTrack.genre === null ? "default" : currentTrack.genre
-  }}
-                </h4>
-                <h4 v-if="server_type === '' ||
-    server_type === serverType ||
-    server_type === 'centovacast'
-    " class="text-white text-left m-1">
-                  {{
-    currentTrack.genre === null ? "default" : currentTrack.genre
-  }}
-                </h4>
-              </div>
-              <hr class="my-1 h-0.5 border-t-0 bg-neutral-100 opacity-100 dark:opacity-50" />
+    
               <InstallButton />
               <!-- <button> install pwa </button> -->
             </div>
@@ -671,22 +350,15 @@ const fetchAndProcessRadioData = async (url: string) => {
                 <div>
 
                   <audio :src="STREAMING_LINK" ref="audioElement"></audio>
-                  <img :src="currentTrack.img_medium_url || img || icecastImgUrl"
+                  <img :src="radioStore.currentRadio.cover || img "
                     class="max-md:w-14 md:w-20 md:h-20 max-md:h-14" alt="" srcset="" />
                 </div>
               </div>
               <div class="p-4">
                 <div>
                   <h1 class="text-gray-200 text-xl text-left">
-                    {{ currentTrack.title }}
-                  </h1>
-
-                  <!-- <h3 v-if="server_type === serverType && serverType === 'icecast'"
-                                        class="text-gray-200 text-md text-left"> {{ currentTrack.server_description }}
-                                    </h3>
-
-                                    <h3 v-if="server_type === serverType && serverType === 'shoutcast' || serverType === 'everest_cast'"
-                                        class="text-gray-200 text-md text-left"> {{ currentTrack.metadata }}</h3> -->
+                    {{ radioStore.currentRadio.title }}
+                  </h1> 
                 </div>
               </div>
             </div>
@@ -795,49 +467,22 @@ const fetchAndProcessRadioData = async (url: string) => {
       <div class="md:hidden container-fluid ">
         <!-- <h1> mobile </h1> -->
         <div class="mx-11 mt-4 p-1 rounded-lg bg-gradient-to-r from-gray-200/25 to-gray-100 w-72 h-80 ">
-          <div class="m-5 h-72">
-            <!-- <img :src="icecastImgUrl || img" alt="" class="rounded-lg h-60"> -->
-            <!-- <img :src="currentTrack.img_large_url || img" v-if="server_type === 'shoutcast'" alt=""
-                        class="rounded-lg h-60"> -->
+          <div class="m-5 h-72"> 
 
-            <img :src="currentTrack.img_medium_url || img || icecastImgUrl" alt="" class="w-full h-32 rounded-lg" />
+            <img :src="radioStore.currentRadio.cover || img " alt="" class="w-full h-32 rounded-lg" />
 
             <h1 class="mt-4 text-white text-left text-sm bg-gray-400 m-1 p-1">
-              {{ currentTrack.title }}
+              {{ radioStore.currentRadio.title }}
 
-            </h1>
-
-            <!-- <span><svg aria-hidden="true" role="status" class="inline w-4 h-4 me-3 text-white animate-spin"
-                                viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path
-                                    d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
-                                    fill="#E5E7EB" />
-                                <path
-                                    d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
-                                    fill="currentColor" />
-                            </svg>
-                            chargement ... </span> -->
+            </h1> 
             <h1 class="mt-4 text-white text-left text-sm">{{ message }}</h1>
           </div>
         </div>
-        <div class="mx-11">
-          <!-- <div class="mt-4">
-                    <h1 class="text-white text-left text-lg"> {{ message }} </h1>
-                </div>   -->
+        <div class="mx-11"> 
           <div class="mt-4 flex">
             <h1 class="text-white text-left text-md">{{ message }}</h1>
-            <div class="flex ml-48">
-              <!-- <VButton class="m-1">
-                <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                  <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
-                  <g id="SVGRepo_iconCarrier">
-                    <path fill-rule="evenodd" clip-rule="evenodd"
-                      d="M13.803 5.33333C13.803 3.49238 15.3022 2 17.1515 2C19.0008 2 20.5 3.49238 20.5 5.33333C20.5 7.17428 19.0008 8.66667 17.1515 8.66667C16.2177 8.66667 15.3738 8.28596 14.7671 7.67347L10.1317 10.8295C10.1745 11.0425 10.197 11.2625 10.197 11.4872C10.197 11.9322 10.109 12.3576 9.94959 12.7464L15.0323 16.0858C15.6092 15.6161 16.3473 15.3333 17.1515 15.3333C19.0008 15.3333 20.5 16.8257 20.5 18.6667C20.5 20.5076 19.0008 22 17.1515 22C15.3022 22 13.803 20.5076 13.803 18.6667C13.803 18.1845 13.9062 17.7255 14.0917 17.3111L9.05007 13.9987C8.46196 14.5098 7.6916 14.8205 6.84848 14.8205C4.99917 14.8205 3.5 13.3281 3.5 11.4872C3.5 9.64623 4.99917 8.15385 6.84848 8.15385C7.9119 8.15385 8.85853 8.64725 9.47145 9.41518L13.9639 6.35642C13.8594 6.03359 13.803 5.6896 13.803 5.33333Z"
-                      fill="#fcfcfc"></path>
-                  </g>
-                </svg>
-              </VButton>    -->
+            <div class="flex ml-48"> 
+
               <VButton class="m-1" @click="openModal1()">
                 <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
@@ -883,8 +528,8 @@ const fetchAndProcessRadioData = async (url: string) => {
         </div>
         <div class="p-1 mx-7 overflow-y-auto">
           <div class="flex sm:w-full sm:h-28 border-black-300/75 rounded-lg shadow-2xl p-1 m-1 scroll"
-            v-for="data in historyTrack" :key="data.id">
-            <img :src="data.img_url" class="rounded-lg w-24 h-24" alt="" srcset="" />
+            v-for="data in radioStore.currentRadio.song_history" :key="data.id">
+            <img :src="data.cover || img" class="rounded-lg w-24 h-24" alt="" srcset="" />
             <h1 class="text-left my-4 mx-1 text-sm text-gray-400 p-2">
               {{ data.title }}
             </h1>
