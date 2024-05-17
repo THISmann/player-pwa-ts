@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeMount, onMounted, onUnmounted, ref } from "vue";
+import { onBeforeMount, onMounted, onUnmounted, ref , computed } from "vue";
 import { ModalsContainer, useModal } from "vue-final-modal";
 import BluetoothModal from "../bleutooth/BluetoothModal.vue";
 import axios from "axios";
@@ -8,17 +8,26 @@ import themeColor from "./colorExtraction";
 import { useRoute, useRouter } from "vue-router";
 import InstallButton from "./installButton.vue";
 import { useRadioStore } from '@/store/radioStore';
-import QrcodeVue, { Level, RenderAs } from 'qrcode.vue'
+import QrcodeVue, { Level, RenderAs } from 'qrcode.vue';
 const radioStore = useRadioStore();
 const chatSocket = ref<WebSocket | null>(null);
 const publicitySocket = ref<WebSocket | null>(null);
 const historyTrack = ref([]);
 import qrcode from "./qrcode.vue";
 
-
 const route = useRoute();
-
- 
+const backgroundImageUrl = ref('')
+const divStyle = computed(() => {
+    return {
+        'background-color': currentBgColor.value || '#FF6503',
+        'background-image': `url(${backgroundImageUrl.value})`,
+        'background-size': 'cover',
+        'background-attachment': 'fixed',
+        'background-position': 'center',
+        'filter': 'blur(0px)' ,
+        'z-index': '-1'
+    };
+});
 
 const getRadioMetaData = async (radioName: string) => {
     try {
@@ -40,8 +49,9 @@ const getRadioMetaData = async (radioName: string) => {
         console.log(response.data);
         const responseData = response.data;
 
-        if (responseData) {
-            STREAMING_LINK.value = responseData.radio_flux
+        if (responseData) { 
+            backgroundImageUrl.value = responseData.cover;
+            STREAMING_LINK.value = responseData.radio_flux;
             radioStore.currentRadio = responseData;
         }
         console.log("history", historyTrack.value);
@@ -53,66 +63,64 @@ const getRadioMetaData = async (radioName: string) => {
 
 // Update every minute
 setInterval(() => {
-    getRadioMetaData(radioStore.radioName);
+    getRadioMetaData(localStorage.getItem("radio_name"));
 }, 1 * 60 * 1000);
 
 // Function to handle WebSocket messages
-const handleMessage = (e: MessageEvent) => {
-    const data = JSON.parse(e.data);
+// const handleMessage = (e: MessageEvent) => {
+//     const data = JSON.parse(e.data);
 
-    //localStorage.getItem("playerRadioID")
-    if (radioStore.currentRadio.id == data.radio.id) {
-        switch (data.action) {
-            case "update":
-                console.log("mise a jour");
+//     if (radioStore.currentRadio?.id === data.radio.id) {
+//         switch (data.action) {
+//             case "update":
+//                 console.log("mise a jour");
+//                 break;
+//             case "delete":
+//                 console.log("suppression");
+//                 break;
+//         }
+//     }
+// };
 
-                break;
-            case "delete":
-                console.log("suppression");
-                break;
-        }
-    }
-};
-
-const handleMessagePub = (e: MessageEvent) => {
-    const data = JSON.parse(e.data);
-    console.log("handle publicity :", data);
-};
+// const handleMessagePub = (e: MessageEvent) => {
+//     const data = JSON.parse(e.data);
+//     console.log("handle publicity :", data);
+// };
 
 // Function to handle WebSocket close events
-const handleClose = (e: CloseEvent) => {
-    console.log(e);
-    console.error("Chat socket closed unexpectedly");
-};
+// const handleClose = (e: CloseEvent) => {
+//     console.log(e);
+//     console.error("Chat socket closed unexpectedly");
+// };
 
-// Function to handle WebSocket close events
-const handleClosePub = (e: CloseEvent) => {
-    console.log(e);
-};
+// // Function to handle WebSocket close events
+// const handleClosePub = (e: CloseEvent) => {
+//     console.log(e);
+// };
 
-// Function to handle WebSocket open events
-const handleOpen = () => {
-    if (chatSocket.value) {
-        chatSocket.value.send(
-            JSON.stringify({
-                action: "subscribe_to_radio_activity",
-                request_id: new Date().getTime(),
-            })
-        );
-    }
-};
+// // Function to handle WebSocket open events
+// const handleOpen = () => {
+//     if (chatSocket.value) {
+//         chatSocket.value.send(
+//             JSON.stringify({
+//                 action: "subscribe_to_radio_activity",
+//                 request_id: new Date().getTime(),
+//             })
+//         );
+//     }
+// };
 
-// Function to handle WebSocket open events
-const handleOpenPub = () => {
-    if (publicitySocket.value) {
-        publicitySocket.value.send(
-            JSON.stringify({
-                action: "subscribe_to_publicity_activity",
-                request_id: new Date().getTime(),
-            })
-        );
-    }
-};
+// // Function to handle WebSocket open events
+// const handleOpenPub = () => {
+//     if (publicitySocket.value) {
+//         publicitySocket.value.send(
+//             JSON.stringify({
+//                 action: "subscribe_to_publicity_activity",
+//                 request_id: new Date().getTime(),
+//             })
+//         );
+//     }
+// };
 
 const play = ref(true);
 const playMobile = ref(true);
@@ -133,8 +141,6 @@ function togglePlay() {
         isPlaying.value = shouldPlay;
     }
 }
-
-
 
 // Create a generic useModal function
 const createUseModal = (component: any, title: string) => {
@@ -172,41 +178,51 @@ const openModalQR = async () => await modalQR.open();
 
 const currentBgColor = ref("");
 
+// const getColorImg = (source: string) => {
+//     const img = new Image();
+//     img.src = source;
+//     img.crossOrigin = 'anonymous';
+//     img.onload = () => {
+//         themeColor(100, img, 40, SetColor);
+//     };
+// }
 
+// const SetColor = (colorArr: number[][]): string => {
+//     const bgc = `rgb(${Math.floor(colorArr[0][0])},${Math.floor(colorArr[0][1])},${Math.floor(colorArr[0][2])})`;
+//     currentBgColor.value = bgc;
+//     return bgc;
+// };
 
-const getColorImg = (source: string) => {
-    const img = new Image();
-    img.src = source;
-    img.crossOrigin = "anonymous";
-    img.onload = () => {
-        themeColor(100, img, 40, SetColor);
-    };
-};
 
 const currentAdIndex = ref(0);
 const currentAdvert = ref(0);
 const advertLists = ref([]);
-//advertLists.value = radioStore.currentRadio.publicities;
+// Ensure radioStore.currentRadio.publicities is defined and has elements
+if (radioStore.currentRadio?.publicities?.length) {
+    advertLists.value = radioStore.currentRadio.publicities;
+    currentAdvert.value = radioStore.currentRadio.publicities[currentAdIndex.value];
+} else {
+    advertLists.value = [];
+}
 
 const showNextAdvert = () => {
-    currentAdIndex.value = (currentAdIndex.value + 1) % radioStore.currentRadio.publicities.length;
-    currentAdvert.value = radioStore.currentRadio.publicities[currentAdIndex.value];
+    if (radioStore.currentRadio.publicities && radioStore.currentRadio.publicities.length > 0) {
+        currentAdIndex.value = (currentAdIndex.value + 1) % radioStore.currentRadio.publicities.length;
+        currentAdvert.value = radioStore.currentRadio.publicities[currentAdIndex.value];
+    }
 };
 
-// Show the first advert initially
-currentAdvert.value = radioStore.currentRadio.publicities[currentAdIndex.value];
+// Show the first advert initially if available
+if (radioStore.currentRadio.publicities && radioStore.currentRadio.publicities.length > 0) {
+    currentAdvert.value = radioStore.currentRadio.publicities[currentAdIndex.value];
+}
 
 const toggleHistory = () => {
     isHistoryOpen.value = !isHistoryOpen.value;
 }
 
-const SetColor = (colorArr: number[][]): string => {
-    const bgc = `rgb(${Math.floor(colorArr[0][0])},${Math.floor(
-        colorArr[0][1]
-    )},${Math.floor(colorArr[0][2])})`;
-    currentBgColor.value = bgc;
-    return bgc;
-};
+
+
 const message = ref("");
 const loading = ref(true);
 
@@ -221,13 +237,7 @@ const toggleShare = () => {
     isShareOpen.value = !isShareOpen.value;
 };
 
-
-
 onMounted(async () => {
-
-    // Fetch metadata when the component is mounted 
-    //const { route_access_token, route_current_radio_id, route_url_api_radio_history, route_url_api_radio, route_url_flux_radio, route_server_type } = route.query;
-
     const route = useRoute();
 
     let radio_name = route.params.radio_name as string;
@@ -242,16 +252,14 @@ onMounted(async () => {
     await getRadioMetaData(radio_name);
     loading.value = true;
     setInterval(showNextAdvert, 10000);
-
 });
-
-
 </script>
 
+
 <template>
-    <div :style="{ 'background-color': currentBgColor || '#FF6503' }">
-        <div class="container-fluid m-0 p-2">
-            <div class="container-fluid max-md:hidden min-h-screen">
+    <div :style="divStyle">
+        <div class="container-fluid m-0 p-2 content" >
+            <div class="container-fluid   min-h-screen">
                 <ModalsContainer />
                 <BluetoothModal :show="modal1.isOpen" @close="modal1.close" />
                 <div class="row">
@@ -268,7 +276,7 @@ onMounted(async () => {
                                         <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
                                         <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round">
                                         </g>
-                                        <g id="SVGRepo_iconCarrier"> 
+                                        <g id="SVGRepo_iconCarrier">
                                             <g>
                                                 <g>
                                                     <g>
@@ -306,10 +314,11 @@ onMounted(async () => {
                             <!-- Navigation Links -->
                             <nav v-show="isMenuOpen">
                                 <ul class=" items-center justify-between text-base text-white pt-4 w-96 lg:pt-0">
-                                    <li v-for="(item, index) in radioStore.currentRadio.menu" :key="index"><a :href="item.link"
+                                    <li v-for="(item, index) in radioStore.currentRadio.menu" :key="index"><a
+                                            :href="item.link"
                                             class="lg:p-4 py-3 px-0 block border-b-2 border-transparent hover:border-white">SITE
-                                            {{item.title}} </a>
-                                    </li> 
+                                            {{ item.title }} </a>
+                                    </li>
                                 </ul>
                             </nav>
                         </div>
@@ -331,7 +340,7 @@ onMounted(async () => {
                                     </svg>
                                 </button>
                             </div>
-                          
+
                         </div>
 
                     </div>
@@ -341,12 +350,12 @@ onMounted(async () => {
                 </div>
 
                 <div class="row">
-                    <div class="p-10 flex items-center justify-center">
+                    <div class="p-15 flex items-center justify-center">
                         <div>
-                            <h1 class="align-center text-gray-700 text-center text-5xl m-1"> {{ radioStore.radioName }}
+                            <h1 class="align-center text-gray-100 bg-gray-700 opacity-50  text-center text-5xl m-1 p-2 drop-shadow-2xl"> {{ radioStore.radioName }}
                             </h1>
                             <img :src="radioStore.currentRadio.cover || img" alt=""
-                                class="w-96 h-32 rounded-lg mx-auto" />
+                                class="w-96  rounded-lg mx-auto h-80 drop-shadow-2xl" />
 
                             <h1 class="mt-4 text-white text-sm text-center">
                                 {{ radioStore.currentRadio.artist_name }}
@@ -391,17 +400,16 @@ onMounted(async () => {
                     </div>
                 </div>
 
-                <div class="row"> 
-                    <div v-for="advert in radioStore.currentRadio.publicities" :key="advert.id" v-show="advert === currentAdvert"
-                        class="p-1 bg-gray-200 rounded-lg m-3 shadow-2xl">
-                        <img src=" ./assets/logo.png"
-                            class="h-80 w-full rounded-lg" alt="" srcset="" />
+                <div class="row">
+                    <div v-for="advert in radioStore.currentRadio.publicities" :key="advert.id"
+                        v-show="advert === currentAdvert" class="p-1 bg-gray-200 rounded-lg m-3 shadow-2xl">
+                        <img src=" ./assets/logo.png" class="h-80 w-full rounded-lg" alt="" srcset="" />
                         <marquee behavior="" direction=""
                             class="text-left mx-1 text-md text-gray-100 bg-gray-500/25 p-1 mt-1 rounded-lg">
                             <h1>{{ advert.description }}</h1>
                         </marquee>
                     </div>
-                </div> 
+                </div>
 
                 <div class="row">
                     <div class="flex justify-between">
@@ -457,7 +465,7 @@ onMounted(async () => {
                 </div>
 
                 <div class="row">
-                    <div id="cards-section" v-show="isHistoryOpen" class="bg-gray-700 opacity-50 p-12">
+                    <div id="cards-section" v-show="isHistoryOpen" class="bg-gray-700 opacity-50 p-12 max-md:hidden">
                         <div class="p-1 mx-7 flex flex-wrap r flow-x-scroll hide-scrollbar">
                             <div v-for="data in radioStore.currentRadio.song_history" :key="data.title"
                                 class="w-2/5 h-44 flex px-4 m-1">
@@ -476,92 +484,27 @@ onMounted(async () => {
                             </div>
                         </div>
                     </div>
-                </div>
-
-
-                <!-- <button @click="update"> Click </button> -->
-            </div>
-            <div class="md:hidden container-fluid ">
-                <!-- <h1> mobile </h1> -->
-                <div class="mx-11 mt-4 p-1 rounded-lg bg-gradient-to-r from-gray-200/25 to-gray-100 w-72 h-80 ">
-                    <div class="m-5 h-72">
-
-                        <img :src="radioStore.currentRadio.cover || img" alt="" class="w-full h-32 rounded-lg" />
-
-                        <h1 class="mt-4 text-white text-left text-sm bg-gray-400 m-1 p-1">
-                            {{ radioStore.currentRadio.title }}
-
-                        </h1>
-                        <h1 class="mt-4 text-white text-left text-sm">{{ message }}</h1>
-                    </div>
-                </div>
-                <div class="mx-11">
-                    <div class="mt-4 flex">
-                        <h1 class="text-white text-left text-md">{{ message }}</h1>
-                        <div class="flex ml-48">
-
-                            <VButton class="m-1" @click="openModal1()">
-                                <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none"
-                                    xmlns="http://www.w3.org/2000/svg">
-                                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
-                                    <g id="SVGRepo_iconCarrier">
-                                        <path d="M7 17L17 7L12 2V22L17 17L7 7" stroke="#fcfcfc" stroke-width="2"
-                                            stroke-linecap="round" stroke-linejoin="round"></path>
-                                    </g>
-                                </svg>
-                            </VButton>
+                    <div class="p-1 mx-7 overflow-y-auto md:hidden" v-show="isHistoryOpen" >
+                        <div class="flex sm:w-full sm:h-28 border-black-300/75 rounded-lg shadow-2xl p-1 m-1 scroll"
+                            v-for="data in radioStore.currentRadio.song_history" :key="data.id">
+                            <img :src="data.cover || img" class="rounded-lg w-24 h-24" alt="" srcset="" />
+                            <h1 class="text-left my-4 mx-1 text-sm text-gray-400 p-2">
+                                {{ data.title }}
+                            </h1>
                         </div>
                     </div>
-
-                    <div v-if="!playMobile" class="mt-2 h-1 w-full bg-gray-400 dark:bg-neutral-600">
-                        <div class="h-1 bg-white" style="width: 50%"></div>
-                    </div>
-                    <div v-if="playMobile" class="mt-2 h-1 w-full bg-gray-400 dark:bg-neutral-600"></div>
                 </div>
-                <div class="mx-40 mt-3">
-                    <VButton v-if="playMobile" @click="togglePlay">
-                        <svg width="64px" height="64px" viewBox="0 0 24 24" fill="none"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                            <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
-                            <g id="SVGRepo_iconCarrier">
-                                <path fill-rule="evenodd" clip-rule="evenodd"
-                                    d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22ZM10.6935 15.8458L15.4137 13.059C16.1954 12.5974 16.1954 11.4026 15.4137 10.941L10.6935 8.15419C9.93371 7.70561 9 8.28947 9 9.21316V14.7868C9 15.7105 9.93371 16.2944 10.6935 15.8458Z"
-                                    fill="#b5b5b5"></path>
-                            </g>
-                        </svg>
-                    </VButton>
-
-                    <VButton v-if="!playMobile" @click="togglePlay">
-                        <svg width="64px" height="64px" viewBox="0 0 24 24" fill="none"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                            <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
-                            <g id="SVGRepo_iconCarrier">
-                                <path fill-rule="evenodd" clip-rule="evenodd"
-                                    d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22ZM8.07612 8.61732C8 8.80109 8 9.03406 8 9.5V14.5C8 14.9659 8 15.1989 8.07612 15.3827C8.17761 15.6277 8.37229 15.8224 8.61732 15.9239C8.80109 16 9.03406 16 9.5 16C9.96594 16 10.1989 16 10.3827 15.9239C10.6277 15.8224 10.8224 15.6277 10.9239 15.3827C11 15.1989 11 14.9659 11 14.5V9.5C11 9.03406 11 8.80109 10.9239 8.61732C10.8224 8.37229 10.6277 8.17761 10.3827 8.07612C10.1989 8 9.96594 8 9.5 8C9.03406 8 8.80109 8 8.61732 8.07612C8.37229 8.17761 8.17761 8.37229 8.07612 8.61732ZM13.0761 8.61732C13 8.80109 13 9.03406 13 9.5V14.5C13 14.9659 13 15.1989 13.0761 15.3827C13.1776 15.6277 13.3723 15.8224 13.6173 15.9239C13.8011 16 14.0341 16 14.5 16C14.9659 16 15.1989 16 15.3827 15.9239C15.6277 15.8224 15.8224 15.6277 15.9239 15.3827C16 15.1989 16 14.9659 16 14.5V9.5C16 9.03406 16 8.80109 15.9239 8.61732C15.8224 8.37229 15.6277 8.17761 15.3827 8.07612C15.1989 8 14.9659 8 14.5 8C14.0341 8 13.8011 8 13.6173 8.07612C13.3723 8.17761 13.1776 8.37229 13.0761 8.61732Z"
-                                    fill="#a9aaad"></path>
-                            </g>
-                        </svg>
-                    </VButton>
-                </div>
-                <div class="p-1 mx-7 overflow-y-auto">
-                    <div class="flex sm:w-full sm:h-28 border-black-300/75 rounded-lg shadow-2xl p-1 m-1 scroll"
-                        v-for="data in radioStore.currentRadio.song_history" :key="data.id">
-                        <img :src="data.cover || img" class="rounded-lg w-24 h-24" alt="" srcset="" />
-                        <h1 class="text-left my-4 mx-1 text-sm text-gray-400 p-2">
-                            {{ data.title }}
-                        </h1>
-                    </div>
-                </div>
-                <div class="flex p-1 mx-7 overflow-x-auto">
-                    <!-- <InstallButton /> -->
-                </div>
-            </div>
+ 
+            </div> 
         </div>
     </div>
 </template>
 
-<style></style>
-<!-- localStorage.setItem("access-token", route.params["access-token"]) -->
+ 
+<style scoped>
+.content {
+  position: relative;
+  z-index: 2;
+  /* Ajoutez d'autres styles pour le contenu si nécessaire */
+}
+</style>
