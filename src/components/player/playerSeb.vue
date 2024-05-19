@@ -56,7 +56,7 @@ const getRadioMetaData = async (radioName: string) => {
         }
 
         const response = await axios.get(
-            `http://localhost:8030/api/radios/metadata/${radioName}`,
+            `https://admin.radiowebapp.com/api/radios/metadata/${radioName}`,
             {
                 headers: {
                 },
