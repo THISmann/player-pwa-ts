@@ -9,12 +9,12 @@ const routes: Array<RouteRecordRaw> = [
   //   component: HomeView,
   // },
   {
-    path: "/:radio_name",
+    path: "/:radio_name?",
     name: "test",
     component: TestView,
   },
   {
-    path: "/player/:radio_name",
+    path: "/player/:radio_name?",
     name: "home",
     component: HomeView,
   }

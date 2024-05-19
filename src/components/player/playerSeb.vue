@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeMount, onMounted, onUnmounted, ref , computed } from "vue";
+import { onBeforeMount, onMounted, onUnmounted, ref, computed } from "vue";
 import { ModalsContainer, useModal } from "vue-final-modal";
 import BluetoothModal from "../bleutooth/BluetoothModal.vue";
 import axios from "axios";
@@ -9,14 +9,31 @@ import { useRoute, useRouter } from "vue-router";
 import InstallButton from "./installButton.vue";
 import { useRadioStore } from '@/store/radioStore';
 import QrcodeVue, { Level, RenderAs } from 'qrcode.vue';
+import qrcode from "./qrcode.vue";
+
 const radioStore = useRadioStore();
 const chatSocket = ref<WebSocket | null>(null);
 const publicitySocket = ref<WebSocket | null>(null);
 const historyTrack = ref([]);
-import qrcode from "./qrcode.vue";
-
 const route = useRoute();
-const backgroundImageUrl = ref('')
+const router = useRouter();
+const backgroundImageUrl = ref('');
+const STREAMING_LINK = ref<string>('');
+const audioElement = ref<HTMLAudioElement | null>(null);
+const isPlaying = ref(false);
+const isHistoryOpen = ref(false);
+const play = ref(true);
+const playMobile = ref(true);
+const currentBgColor = ref('');
+const currentAdIndex = ref(0);
+const currentAdvert = ref(0);
+const advertLists = ref([]);
+const isMenuOpen = ref(false);
+const isShareOpen = ref(false);
+const loading = ref(true);
+const message = ref('');
+
+// Background style computation
 const divStyle = computed(() => {
     return {
         'background-color': currentBgColor.value || '#FF6503',
@@ -24,11 +41,13 @@ const divStyle = computed(() => {
         'background-size': 'cover',
         'background-attachment': 'fixed',
         'background-position': 'center',
-        'filter': 'blur(0px)' ,
-        'z-index': '-1'
+        'filter': 'blur(0px)',
+        'z-index': '-1',
     };
 });
 
+const errorMsg = ref('');
+// Fetch radio metadata
 const getRadioMetaData = async (radioName: string) => {
     try {
         if (!radioName) {
@@ -40,8 +59,6 @@ const getRadioMetaData = async (radioName: string) => {
             `http://localhost:8030/api/radios/metadata/${radioName}`,
             {
                 headers: {
-                    //'Authorization': `Ekila ${localStorage.getItem("access-token")}`
-                    //Authorization: `Ekila ${localStorage.getItem("access-token")}`,
                 },
             }
         );
@@ -49,100 +66,47 @@ const getRadioMetaData = async (radioName: string) => {
         console.log(response.data);
         const responseData = response.data;
 
-        if (responseData) { 
+        if (response.data.detail) {
+            errorMsg.value = response.data.detail
+        }
+
+          // Vérification si response.data est vide
+          if (!response.data || Object.keys(response.data).length === 0) {
+            errorMsg.value = "Api indisponible"
+            return;
+        }
+
+        if (responseData) {
             backgroundImageUrl.value = responseData.cover;
             STREAMING_LINK.value = responseData.radio_flux;
             radioStore.currentRadio = responseData;
         }
         console.log("history", historyTrack.value);
     } catch (error) {
-        // Handle other errors
-        console.error("other error:", error);
+        console.error("Error fetching radio metadata:", error);
     }
 }
 
-// Update every minute
+// Update metadata every minute
 setInterval(() => {
-    getRadioMetaData(localStorage.getItem("radio_name"));
-}, 1 * 60 * 1000);
+    getRadioMetaData(localStorage.getItem("radio_name") || '');
+}, 1 * 30 * 1000);
 
-// Function to handle WebSocket messages
-// const handleMessage = (e: MessageEvent) => {
-//     const data = JSON.parse(e.data);
-
-//     if (radioStore.currentRadio?.id === data.radio.id) {
-//         switch (data.action) {
-//             case "update":
-//                 console.log("mise a jour");
-//                 break;
-//             case "delete":
-//                 console.log("suppression");
-//                 break;
-//         }
-//     }
-// };
-
-// const handleMessagePub = (e: MessageEvent) => {
-//     const data = JSON.parse(e.data);
-//     console.log("handle publicity :", data);
-// };
-
-// Function to handle WebSocket close events
-// const handleClose = (e: CloseEvent) => {
-//     console.log(e);
-//     console.error("Chat socket closed unexpectedly");
-// };
-
-// // Function to handle WebSocket close events
-// const handleClosePub = (e: CloseEvent) => {
-//     console.log(e);
-// };
-
-// // Function to handle WebSocket open events
-// const handleOpen = () => {
-//     if (chatSocket.value) {
-//         chatSocket.value.send(
-//             JSON.stringify({
-//                 action: "subscribe_to_radio_activity",
-//                 request_id: new Date().getTime(),
-//             })
-//         );
-//     }
-// };
-
-// // Function to handle WebSocket open events
-// const handleOpenPub = () => {
-//     if (publicitySocket.value) {
-//         publicitySocket.value.send(
-//             JSON.stringify({
-//                 action: "subscribe_to_publicity_activity",
-//                 request_id: new Date().getTime(),
-//             })
-//         );
-//     }
-// };
-
-const play = ref(true);
-const playMobile = ref(true);
-const STREAMING_LINK = ref<string>('');
-const audioElement = ref<HTMLAudioElement | null>(null);
-const isPlaying = ref(false);
-const isHistoryOpen = ref(false);
-function togglePlay() {
+// Play/Pause functionality
+const togglePlay = () => {
     if (audioElement.value) {
-        const shouldPlay = !isPlaying.value;
         if (audioElement.value.paused) {
             audioElement.value.play();
         } else {
             audioElement.value.pause();
         }
-        play.value = shouldPlay;
-        playMobile.value = shouldPlay;
-        isPlaying.value = shouldPlay;
+        isPlaying.value = !audioElement.value.paused;
+        play.value = !audioElement.value.paused;
+        playMobile.value = !audioElement.value.paused;
     }
 }
 
-// Create a generic useModal function
+// Modal management
 const createUseModal = (component: any, title: string) => {
     const { open, close, options, patchOptions } = useModal({
         defaultModelValue: false,
@@ -176,35 +140,7 @@ const openModal1 = async () => await modal1.open();
 const modalQR = createUseModal(qrcode, "Qr Code");
 const openModalQR = async () => await modalQR.open();
 
-const currentBgColor = ref("");
-
-// const getColorImg = (source: string) => {
-//     const img = new Image();
-//     img.src = source;
-//     img.crossOrigin = 'anonymous';
-//     img.onload = () => {
-//         themeColor(100, img, 40, SetColor);
-//     };
-// }
-
-// const SetColor = (colorArr: number[][]): string => {
-//     const bgc = `rgb(${Math.floor(colorArr[0][0])},${Math.floor(colorArr[0][1])},${Math.floor(colorArr[0][2])})`;
-//     currentBgColor.value = bgc;
-//     return bgc;
-// };
-
-
-const currentAdIndex = ref(0);
-const currentAdvert = ref(0);
-const advertLists = ref([]);
-// Ensure radioStore.currentRadio.publicities is defined and has elements
-if (radioStore.currentRadio?.publicities?.length) {
-    advertLists.value = radioStore.currentRadio.publicities;
-    currentAdvert.value = radioStore.currentRadio.publicities[currentAdIndex.value];
-} else {
-    advertLists.value = [];
-}
-
+// Advertisements
 const showNextAdvert = () => {
     if (radioStore.currentRadio.publicities && radioStore.currentRadio.publicities.length > 0) {
         currentAdIndex.value = (currentAdIndex.value + 1) % radioStore.currentRadio.publicities.length;
@@ -217,48 +153,39 @@ if (radioStore.currentRadio.publicities && radioStore.currentRadio.publicities.l
     currentAdvert.value = radioStore.currentRadio.publicities[currentAdIndex.value];
 }
 
+// History toggle
 const toggleHistory = () => {
     isHistoryOpen.value = !isHistoryOpen.value;
 }
 
-
-
-const message = ref("");
-const loading = ref(true);
-
-const isMenuOpen = ref(false);
-const isShareOpen = ref(false);
-
+// Menu toggle
 const toggleMenu = () => {
     isMenuOpen.value = !isMenuOpen.value;
 };
 
+// Share toggle
 const toggleShare = () => {
     isShareOpen.value = !isShareOpen.value;
 };
 
+// Mounted lifecycle hook
 onMounted(async () => {
-    const route = useRoute();
-
     let radio_name = route.params.radio_name as string;
-    let radioSet = !!radio_name
-    if (radioSet) {
+    if (radio_name) {
         localStorage.setItem("radio_name", radio_name);
     } else {
-        radio_name = localStorage.getItem("radio_name")!
+        radio_name = localStorage.getItem("radio_name")!;
     }
     document.title = radio_name;
     radioStore.radioName = radio_name;
     await getRadioMetaData(radio_name);
-    loading.value = true;
+    loading.value = false;
     setInterval(showNextAdvert, 10000);
 });
 </script>
-
-
 <template>
     <div :style="divStyle">
-        <div class="container-fluid m-0 p-2 content" >
+        <div class="container-fluid m-0 p-2 content">
             <div class="container-fluid   min-h-screen">
                 <ModalsContainer />
                 <BluetoothModal :show="modal1.isOpen" @close="modal1.close" />
@@ -340,19 +267,22 @@ onMounted(async () => {
                                     </svg>
                                 </button>
                             </div>
-
                         </div>
-
                     </div>
+                </div>
 
-
-
+                <div class="row">
+                    <marquee behavior="" direction=""> 
+                        <h1 class="text-gray-100 text-lg"> {{ errorMsg }} </h1>
+                    </marquee>
                 </div>
 
                 <div class="row">
                     <div class="p-15 flex items-center justify-center">
                         <div>
-                            <h1 class="align-center text-gray-100 bg-gray-700 opacity-50  text-center text-5xl m-1 p-2 drop-shadow-2xl"> {{ radioStore.radioName }}
+                            <h1
+                                class="align-center text-gray-100 bg-gray-700 opacity-50  text-center text-5xl m-1 p-2 drop-shadow-2xl">
+                                {{ radioStore.radioName }}
                             </h1>
                             <img :src="radioStore.currentRadio.cover || img" alt=""
                                 class="w-96  rounded-lg mx-auto h-80 drop-shadow-2xl" />
@@ -403,7 +333,7 @@ onMounted(async () => {
                 <div class="row">
                     <div v-for="advert in radioStore.currentRadio.publicities" :key="advert.id"
                         v-show="advert === currentAdvert" class="p-1 bg-gray-200 rounded-lg m-3 shadow-2xl">
-                        <img src=" ./assets/logo.png" class="h-80 w-full rounded-lg" alt="" srcset="" />
+                        <img :src="advert.image || img" class="h-80 w-full rounded-lg" alt="" />
                         <marquee behavior="" direction=""
                             class="text-left mx-1 text-md text-gray-100 bg-gray-500/25 p-1 mt-1 rounded-lg">
                             <h1>{{ advert.description }}</h1>
@@ -468,9 +398,9 @@ onMounted(async () => {
                     <div id="cards-section" v-show="isHistoryOpen" class="bg-gray-700 opacity-50 p-12 max-md:hidden">
                         <div class="p-1 mx-7 flex flex-wrap r flow-x-scroll hide-scrollbar">
                             <div v-for="data in radioStore.currentRadio.song_history" :key="data.title"
-                                class="w-2/5 h-44 flex px-4 m-1">
-                                <img :src="data.cover" class="rounded-lg h-40 " alt="" srcset="" />
-                                <div>
+                                class="lg:w-2/5 md:w-1/2 h-44 flex px-4 m-1">
+                                <img :src="data.cover || img" class="rounded-lg h-40 " alt="" srcset="" />
+                                <div class="w-80">
                                     <h1
                                         class="text-left mx-12 text-md text-gray-100 p-1 m-0 rounded-lg   overflow-hidden overflow-ellipsis whitespace-nowrap">
                                         {{ data.artist_name }}
@@ -484,8 +414,8 @@ onMounted(async () => {
                             </div>
                         </div>
                     </div>
-                    <div class="p-1 mx-7 overflow-y-auto md:hidden" v-show="isHistoryOpen" >
-                        <div class="flex sm:w-full sm:h-28 border-black-300/75 rounded-lg shadow-2xl p-1 m-1 scroll"
+                    <div class="p-1 mx-7 overflow-y-auto md:hidden" v-show="isHistoryOpen">
+                        <div class="flex sm:w-full sm:h-28 border-black-300/75 bg-gray-700 opacity-50 rounded-lg shadow-2xl p-1 m-1 scroll"
                             v-for="data in radioStore.currentRadio.song_history" :key="data.id">
                             <img :src="data.cover || img" class="rounded-lg w-24 h-24" alt="" srcset="" />
                             <h1 class="text-left my-4 mx-1 text-sm text-gray-400 p-2">
@@ -494,17 +424,17 @@ onMounted(async () => {
                         </div>
                     </div>
                 </div>
- 
-            </div> 
+
+            </div>
         </div>
     </div>
 </template>
 
- 
+
 <style scoped>
 .content {
-  position: relative;
-  z-index: 2;
-  /* Ajoutez d'autres styles pour le contenu si nécessaire */
+    position: relative;
+    z-index: 2;
+    /* Ajoutez d'autres styles pour le contenu si nécessaire */
 }
 </style>
