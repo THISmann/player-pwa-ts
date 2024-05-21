@@ -20,7 +20,7 @@ const radioStore = useRadioStore();
 const qrcodeUrl = ref('');
 
 // Generate the QR code URL for the specified URL
-const url = `http://localhost:8082/${radioStore.radioName}`;
+const url = `https://stream.radiowebapp.com:8040/${radioStore.radioName}`;
 qrcodeUrl.value = url;
 
 // Define the props this component accepts
