@@ -41,8 +41,7 @@ const divStyle = computed(() => {
         'background-size': 'cover',
         'background-attachment': 'fixed',
         'background-position': 'center',
-        'filter': 'blur(0px)',
-        'z-index': '-1',
+        'filter': 'blur(0px)', 
     };
 });
 
@@ -184,61 +183,18 @@ onMounted(async () => {
 });
 </script>
 <template>
-    <div :style="divStyle">
-        <div class="container-fluid m-0 p-2 content">
-            <div class="container-fluid   min-h-screen">
+    <div class="sm:overscroll-none" :style="divStyle">
+        <div class="container-fluid m-0 p-2 content bg-gray-700 opacity-80">
+            <div class="container-fluid min-h-screen">
                 <ModalsContainer />
                 <BluetoothModal :show="modal1.isOpen" @close="modal1.close" />
                 <div class="row">
                     <div class="flex justify-between">
-                        <div class=" py-4 px-6  m-5">
-                            <!-- Hamburger Icon -->
+                        <div class=" py-4 px-6  m-5"> 
                             <div class="block ">
                                 <button @click="toggleMenu" class="text-white focus:outline-none">
-                                    <svg fill="#000000" version="1.1" id="Layer_1" xmlns:x="&amp;ns_extend;"
-                                        xmlns:i="&amp;ns_ai;" xmlns:graph="&amp;ns_graphs;"
-                                        xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                                        width="32px" height="32px" viewBox="0 0 24 24" enable-background="new 0 0 24 24"
-                                        xml:space="preserve">
-                                        <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                                        <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round">
-                                        </g>
-                                        <g id="SVGRepo_iconCarrier">
-                                            <g>
-                                                <g>
-                                                    <g>
-                                                        <path
-                                                            d="M12,24C5.4,24,0,18.6,0,12S5.4,0,12,0s12,5.4,12,12S18.6,24,12,24z M12,2C6.5,2,2,6.5,2,12s4.5,10,10,10s10-4.5,10-10 S17.5,2,12,2z">
-                                                        </path>
-                                                    </g>
-                                                </g>
-                                                <g>
-                                                    <g>
-                                                        <path
-                                                            d="M16,9H8C7.4,9,7,8.6,7,8s0.4-1,1-1h8c0.6,0,1,0.4,1,1S16.6,9,16,9z">
-                                                        </path>
-                                                    </g>
-                                                </g>
-                                                <g>
-                                                    <g>
-                                                        <path
-                                                            d="M16,13H8c-0.6,0-1-0.4-1-1s0.4-1,1-1h8c0.6,0,1,0.4,1,1S16.6,13,16,13z">
-                                                        </path>
-                                                    </g>
-                                                </g>
-                                                <g>
-                                                    <g>
-                                                        <path
-                                                            d="M16,17H8c-0.6,0-1-0.4-1-1s0.4-1,1-1h8c0.6,0,1,0.4,1,1S16.6,17,16,17z">
-                                                        </path>
-                                                    </g>
-                                                </g>
-                                            </g>
-                                        </g>
-                                    </svg>
-                                </button>
-                            </div>
-                            <!-- Navigation Links -->
+                                    <svg fill="#ffffff" width="40px" height="40px" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <title>menu</title> <path d="M8 24h16v-4h-16v4zM8 18.016h16v-4h-16v4zM8 12h16v-4h-16v4z"></path> </g></svg> </button>
+                            </div> 
                             <nav v-show="isMenuOpen">
                                 <ul class=" items-center justify-between text-base text-white pt-4 w-96 lg:pt-0">
                                     <li v-for="(item, index) in radioStore.currentRadio.menu" :key="index"><a
@@ -250,21 +206,10 @@ onMounted(async () => {
                             </nav>
                         </div>
 
-                        <div class=" py-4 px-6   m-5">
-                            <!-- Hamburger Icon -->
+                        <div class=" py-4 px-6   m-5"> 
                             <div class="align-self: flex-end ">
                                 <button @click="openModalQR()" class="text-white focus:outline-none ">
-                                    <svg width="32px" height="32px" viewBox="0 0 24 24" fill="none"
-                                        xmlns="http://www.w3.org/2000/svg">
-                                        <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                                        <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round">
-                                        </g>
-                                        <g id="SVGRepo_iconCarrier">
-                                            <path fill-rule="evenodd" clip-rule="evenodd"
-                                                d="M13.803 5.33333C13.803 3.49238 15.3022 2 17.1515 2C19.0008 2 20.5 3.49238 20.5 5.33333C20.5 7.17428 19.0008 8.66667 17.1515 8.66667C16.2177 8.66667 15.3738 8.28596 14.7671 7.67347L10.1317 10.8295C10.1745 11.0425 10.197 11.2625 10.197 11.4872C10.197 11.9322 10.109 12.3576 9.94959 12.7464L15.0323 16.0858C15.6092 15.6161 16.3473 15.3333 17.1515 15.3333C19.0008 15.3333 20.5 16.8257 20.5 18.6667C20.5 20.5076 19.0008 22 17.1515 22C15.3022 22 13.803 20.5076 13.803 18.6667C13.803 18.1845 13.9062 17.7255 14.0917 17.3111L9.05007 13.9987C8.46196 14.5098 7.6916 14.8205 6.84848 14.8205C4.99917 14.8205 3.5 13.3281 3.5 11.4872C3.5 9.64623 4.99917 8.15385 6.84848 8.15385C7.9119 8.15385 8.85853 8.64725 9.47145 9.41518L13.9639 6.35642C13.8594 6.03359 13.803 5.6896 13.803 5.33333Z"
-                                                fill="#1C274C"></path>
-                                        </g>
-                                    </svg>
+                                    <svg width="40px" height="40px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path fill-rule="evenodd" clip-rule="evenodd" d="M13.803 5.33333C13.803 3.49238 15.3022 2 17.1515 2C19.0008 2 20.5 3.49238 20.5 5.33333C20.5 7.17428 19.0008 8.66667 17.1515 8.66667C16.2177 8.66667 15.3738 8.28596 14.7671 7.67347L10.1317 10.8295C10.1745 11.0425 10.197 11.2625 10.197 11.4872C10.197 11.9322 10.109 12.3576 9.94959 12.7464L15.0323 16.0858C15.6092 15.6161 16.3473 15.3333 17.1515 15.3333C19.0008 15.3333 20.5 16.8257 20.5 18.6667C20.5 20.5076 19.0008 22 17.1515 22C15.3022 22 13.803 20.5076 13.803 18.6667C13.803 18.1845 13.9062 17.7255 14.0917 17.3111L9.05007 13.9987C8.46196 14.5098 7.6916 14.8205 6.84848 14.8205C4.99917 14.8205 3.5 13.3281 3.5 11.4872C3.5 9.64623 4.99917 8.15385 6.84848 8.15385C7.9119 8.15385 8.85853 8.64725 9.47145 9.41518L13.9639 6.35642C13.8594 6.03359 13.803 5.6896 13.803 5.33333Z" fill="#1C274C"></path> </g></svg>
                                 </button>
                             </div>
                         </div>
@@ -278,11 +223,11 @@ onMounted(async () => {
                 </div>
 
                 <div class="row">
-                    <div class="p-15 flex items-center justify-center">
+                    <div class=" flex overflow-hidden items-center justify-center">
                         <div>
                             <h1
-                                class="align-center text-gray-100 bg-gray-700 opacity-50  text-center text-5xl m-1 p-2 drop-shadow-2xl">
-                                {{ radioStore.radioName }}
+                                class="align-center text-gray-100 w-full   text-center text-4xl m-1 p-2 drop-shadow-2xl">
+                                {{ radioStore.radioName  }} 
                             </h1>
                             <img :src="radioStore.currentRadio.cover || img" alt=""
                                 class="w-96  rounded-lg mx-auto h-80 drop-shadow-2xl" />
@@ -395,18 +340,18 @@ onMounted(async () => {
                 </div>
 
                 <div class="row">
-                    <div id="cards-section" v-show="isHistoryOpen" class="bg-gray-700 opacity-50 p-12 max-md:hidden">
-                        <div class="p-1 mx-7 flex flex-wrap r flow-x-scroll hide-scrollbar">
+                    <div id="cards-section" v-show="isHistoryOpen" class="bg-gray-700 opacity-70 p-12 max-md:hidden">
+                        <div class="p-1 mx-7 flex flex-wrap overflow-hidden hide-scrollbar">
                             <div v-for="data in radioStore.currentRadio.song_history" :key="data.title"
                                 class="lg:w-2/5 md:w-1/2 h-44 flex px-4 m-1">
                                 <img :src="data.cover || img" class="rounded-lg h-40 " alt="" srcset="" />
                                 <div class="w-80">
                                     <h1
-                                        class="text-left mx-12 text-md text-gray-100 p-1 m-0 rounded-lg   overflow-hidden overflow-ellipsis whitespace-nowrap">
+                                        class="text-left mx-12 text-md text-white p-1 m-0 rounded-lg   overflow-hidden overflow-ellipsis whitespace-nowrap">
                                         {{ data.artist_name }}
                                     </h1>
                                     <h1
-                                        class="text-left mx-12 text-md text-gray-100 p-1 m-0 rounded-lg   overflow-hidden overflow-ellipsis whitespace-nowrap">
+                                        class="text-left mx-12 text-md text-white p-1 m-0 rounded-lg   overflow-hidden overflow-ellipsis whitespace-nowrap">
                                         {{ data.title }}
                                     </h1>
                                 </div>
@@ -415,10 +360,10 @@ onMounted(async () => {
                         </div>
                     </div>
                     <div class="p-1 mx-7 overflow-y-auto md:hidden" v-show="isHistoryOpen">
-                        <div class="flex sm:w-full sm:h-28 border-black-300/75 bg-gray-700 opacity-50 rounded-lg shadow-2xl p-1 m-1 scroll"
+                        <div class="flex sm:w-full sm:h-28 border-black-300/75 bg-gray-700 opacity-70 rounded-lg shadow-2xl p-1 m-1 scroll"
                             v-for="data in radioStore.currentRadio.song_history" :key="data.id">
                             <img :src="data.cover || img" class="rounded-lg w-24 h-24" alt="" srcset="" />
-                            <h1 class="text-left my-4 mx-1 text-sm text-gray-400 p-2">
+                            <h1 class="text-left my-4 mx-1 text-sm text-white p-2">
                                 {{ data.title }}
                             </h1>
                         </div>
@@ -430,11 +375,143 @@ onMounted(async () => {
     </div>
 </template>
 
+<!-- <template>
+    <div :style="divStyle">
+        <div class="container-fluid m-0 p-2 content">
+            <div class="container-fluid min-h-screen">
+                <ModalsContainer />
+                <BluetoothModal :show="modal1.isOpen" @close="modal1.close" />
+                <div class="row">
+                    <div class="flex justify-between">
+                        <div class="py-4 px-6 m-5">n
+                            <div class="block">
+                                <button @click="toggleMenu" class="text-white focus:outline-none">
+                                n
+                                </button>
+                            </div> 
+                            <nav v-show="isMenuOpen">
+                                <ul class="items-center justify-between text-base text-white pt-4 w-96 lg:pt-0">
+                                    <li v-for="(item, index) in radioStore.currentRadio.menu" :key="index">
+                                        <a :href="item.link" class="lg:p-4 py-3 px-0 block border-b-2 border-transparent hover:border-white">
+                                            SITE {{ item.title }}
+                                        </a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
 
-<style scoped>
-.content {
-    position: relative;
-    z-index: 2;
-    /* Ajoutez d'autres styles pour le contenu si nécessaire */
+                        <div class="py-4 px-6 m-5"> 
+                            <div class="align-self: flex-end">
+                                <button @click="openModalQR()" class="text-white focus:outline-none">
+                                       </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <marquee behavior="" direction="">
+                        <h1 class="text-gray-100 text-lg">{{ errorMsg }}</h1>
+                    </marquee>
+                </div>
+
+              <div class="row">
+                    <div class="flex overflow-hidden items-center justify-center">
+                        <div>
+                            <h1 class="align-center text-gray-100 w-auto sm:w-auto bg-gray-700 opacity-50 text-center text-5xl m-1 p-2 drop-shadow-2xl">
+                                {{ radioStore.radioName }}
+                            </h1>
+                            <img :src="radioStore.currentRadio.cover || img" alt="" class="w-96 rounded-lg mx-auto h-80 drop-shadow-2xl" />
+                            <h1 class="mt-4 text-white text-sm text-center">{{ radioStore.currentRadio.artist_name }}</h1>
+                            <h1 class="mt-4 text-white text-center text-sm">{{ radioStore.currentRadio.title }}</h1>
+                            <audio :src="STREAMING_LINK" ref="audioElement"></audio>
+                            <div class="mt-3 mx-80">
+                                <VButton v-if="play" @click="togglePlay"> 
+                                </VButton>
+
+                                <VButton v-if="!play" @click="togglePlay"> 
+                                </VButton>
+                            </div>
+                        </div>
+                    </div>
+                </div> 
+
+                <div class="row">
+                    <div v-for="advert in radioStore.currentRadio.publicities" :key="advert.id" v-show="advert === currentAdvert" class="p-1 bg-gray-200 rounded-lg m-3 shadow-2xl">
+                        <img :src="advert.image || img" class="h-80 w-full rounded-lg" alt="" />
+                        <marquee behavior="" direction="" class="text-left mx-1 text-md text-gray-100 bg-gray-500/25 p-1 mt-1 rounded-lg">
+                            <h1>{{ advert.description }}</h1>
+                        </marquee>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="flex justify-between">
+                        <div>
+                            <VButton @click="openModal1()"> 
+                            </VButton>
+                        </div>
+                        <div class="p-2 border rounded-lg bg-blue-100 m-2" @click="toggleHistory">
+                            <h1 class="text-center">Titres récents</h1>
+                        </div>
+
+                        <div>
+                            <VButton> 
+                            </VButton>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div id="cards-section" v-show="isHistoryOpen" class="bg-gray-700 opacity-50 p-12 max-md:hidden">
+                        <div class="p-1 mx-7 flex flex-wrap flow-x-scroll hide-scrollbar">
+                            <div v-for="data in radioStore.currentRadio.song_history" :key="data.title" class="lg:w-2/5 md:w-1/2 h-44 flex px-4 m-1">
+                                <img :src="data.cover || img" class="rounded-lg h-40" alt="" />
+                                <div class="w-80">
+                                    <h1 class="text-left mx-12 text-md text-gray-100 p-1 m-0 rounded-lg overflow-hidden overflow-ellipsis whitespace-nowrap">
+                                        {{ data.artist_name }}
+                                    </h1>
+                                    <h1 class="text-left mx-12 text-md text-gray-100 p-1 m-0 rounded-lg overflow-hidden overflow-ellipsis whitespace-nowrap">
+                                        {{ data.title }}
+                                    </h1>
+                                </div>
+                            </div>
+                        </div>
+                    </div>  
+                     <div class="p-1 mx-7 overflow-y-auto md:hidden" v-show="isHistoryOpen">
+                        <div class="flex sm:w-full sm:h-28 border-black-300/75 bg-gray-700 opacity-50 rounded-lg shadow-2xl p-1 m-1 scroll" v-for="data in radioStore.currentRadio.song_history" :key="data.id">
+                            <img :src="data.cover || img" class="rounded-lg w-24 h-24" alt="" />
+                            <h1 class="text-left my-4 mx-1 text-sm text-gray-400 p-2">{{ data.title }}</h1>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</template> -->
+
+<style>
+/* Hide scrollbar for large screens */
+@media (min-width: 769px) {
+   .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+   .hide-scrollbar {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+    }
+}
+
+/* Prevent horizontal scrolling on mobile devices */
+@media (max-width: 768px) {
+    #cards-section {
+        overflow-x: hidden; /* Prevent horizontal scrolling */
+    }
 }
 </style>
+
+
+
+ 
