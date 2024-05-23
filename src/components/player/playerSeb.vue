@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeMount, onMounted, onUnmounted, ref, computed } from "vue";
+import { onBeforeMount, onMounted, onUnmounted, ref, computed , watch} from "vue";
 import { ModalsContainer, useModal } from "vue-final-modal";
 import BluetoothModal from "../bleutooth/BluetoothModal.vue";
 import axios from "axios";
@@ -10,6 +10,8 @@ import InstallButton from "./installButton.vue";
 import { useRadioStore } from '@/store/radioStore';
 import QrcodeVue, { Level, RenderAs } from 'qrcode.vue';
 import qrcode from "./qrcode.vue";
+import errorNoFound from "./errorNoFound.vue";
+import errorServer from "./errorServer.vue";
 
 const radioStore = useRadioStore();
 const chatSocket = ref<WebSocket | null>(null);
@@ -41,7 +43,7 @@ const divStyle = computed(() => {
         'background-size': 'cover',
         'background-attachment': 'fixed',
         'background-position': 'center',
-        'filter': 'blur(0px)', 
+        'filter': 'blur(0px)',
     };
 });
 
@@ -66,12 +68,15 @@ const getRadioMetaData = async (radioName: string) => {
         const responseData = response.data;
 
         if (response.data.detail) {
-            errorMsg.value = response.data.detail
+            radioStore.radioErrMsg = response.data.detail;
+            openServerNoF();
+
         }
 
-          // Vérification si response.data est vide
-          if (!response.data || Object.keys(response.data).length === 0) {
-            errorMsg.value = "Api indisponible"
+        // Vérification si response.data est vide
+        if (!response.data || Object.keys(response.data).length === 0) {
+            radioStore.radioErrMsg = "Api indisponible"
+            openServerErr();
             return;
         }
 
@@ -139,6 +144,12 @@ const openModal1 = async () => await modal1.open();
 const modalQR = createUseModal(qrcode, "Qr Code");
 const openModalQR = async () => await modalQR.open();
 
+const modalErrorServer = createUseModal(errorServer, errorMsg.value);
+const openServerErr = async () => await modalErrorServer.open();
+
+const modalNoFound = createUseModal(errorNoFound, errorMsg.value);
+const openServerNoF = async () => await modalNoFound.open();
+
 // Advertisements
 const showNextAdvert = () => {
     if (radioStore.currentRadio.publicities && radioStore.currentRadio.publicities.length > 0) {
@@ -190,11 +201,20 @@ onMounted(async () => {
                 <BluetoothModal :show="modal1.isOpen" @close="modal1.close" />
                 <div class="row">
                     <div class="flex justify-between">
-                        <div class=" py-4 px-6  m-5"> 
+                        <div class=" py-4 px-6  m-5">
                             <div class="block ">
                                 <button @click="toggleMenu" class="text-white focus:outline-none">
-                                    <svg fill="#ffffff" width="40px" height="40px" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <title>menu</title> <path d="M8 24h16v-4h-16v4zM8 18.016h16v-4h-16v4zM8 12h16v-4h-16v4z"></path> </g></svg> </button>
-                            </div> 
+                                    <svg fill="#ffffff" width="40px" height="40px" viewBox="0 0 32 32" version="1.1"
+                                        xmlns="http://www.w3.org/2000/svg" stroke="#ffffff">
+                                        <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                                        <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round">
+                                        </g>
+                                        <g id="SVGRepo_iconCarrier">
+                                            <title>menu</title>
+                                            <path d="M8 24h16v-4h-16v4zM8 18.016h16v-4h-16v4zM8 12h16v-4h-16v4z"></path>
+                                        </g>
+                                    </svg> </button>
+                            </div>
                             <nav v-show="isMenuOpen">
                                 <ul class=" items-center justify-between text-base text-white pt-4 w-96 lg:pt-0">
                                     <li v-for="(item, index) in radioStore.currentRadio.menu" :key="index"><a
@@ -206,10 +226,20 @@ onMounted(async () => {
                             </nav>
                         </div>
 
-                        <div class=" py-4 px-6   m-5"> 
+                        <div class=" py-4 px-6   m-5">
                             <div class="align-self: flex-end ">
                                 <button @click="openModalQR()" class="text-white focus:outline-none ">
-                                    <svg width="40px" height="40px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path fill-rule="evenodd" clip-rule="evenodd" d="M13.803 5.33333C13.803 3.49238 15.3022 2 17.1515 2C19.0008 2 20.5 3.49238 20.5 5.33333C20.5 7.17428 19.0008 8.66667 17.1515 8.66667C16.2177 8.66667 15.3738 8.28596 14.7671 7.67347L10.1317 10.8295C10.1745 11.0425 10.197 11.2625 10.197 11.4872C10.197 11.9322 10.109 12.3576 9.94959 12.7464L15.0323 16.0858C15.6092 15.6161 16.3473 15.3333 17.1515 15.3333C19.0008 15.3333 20.5 16.8257 20.5 18.6667C20.5 20.5076 19.0008 22 17.1515 22C15.3022 22 13.803 20.5076 13.803 18.6667C13.803 18.1845 13.9062 17.7255 14.0917 17.3111L9.05007 13.9987C8.46196 14.5098 7.6916 14.8205 6.84848 14.8205C4.99917 14.8205 3.5 13.3281 3.5 11.4872C3.5 9.64623 4.99917 8.15385 6.84848 8.15385C7.9119 8.15385 8.85853 8.64725 9.47145 9.41518L13.9639 6.35642C13.8594 6.03359 13.803 5.6896 13.803 5.33333Z" fill="#1C274C"></path> </g></svg>
+                                    <svg width="40px" height="40px" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg" stroke="#ffffff">
+                                        <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                                        <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round">
+                                        </g>
+                                        <g id="SVGRepo_iconCarrier">
+                                            <path fill-rule="evenodd" clip-rule="evenodd"
+                                                d="M13.803 5.33333C13.803 3.49238 15.3022 2 17.1515 2C19.0008 2 20.5 3.49238 20.5 5.33333C20.5 7.17428 19.0008 8.66667 17.1515 8.66667C16.2177 8.66667 15.3738 8.28596 14.7671 7.67347L10.1317 10.8295C10.1745 11.0425 10.197 11.2625 10.197 11.4872C10.197 11.9322 10.109 12.3576 9.94959 12.7464L15.0323 16.0858C15.6092 15.6161 16.3473 15.3333 17.1515 15.3333C19.0008 15.3333 20.5 16.8257 20.5 18.6667C20.5 20.5076 19.0008 22 17.1515 22C15.3022 22 13.803 20.5076 13.803 18.6667C13.803 18.1845 13.9062 17.7255 14.0917 17.3111L9.05007 13.9987C8.46196 14.5098 7.6916 14.8205 6.84848 14.8205C4.99917 14.8205 3.5 13.3281 3.5 11.4872C3.5 9.64623 4.99917 8.15385 6.84848 8.15385C7.9119 8.15385 8.85853 8.64725 9.47145 9.41518L13.9639 6.35642C13.8594 6.03359 13.803 5.6896 13.803 5.33333Z"
+                                                fill="#1C274C"></path>
+                                        </g>
+                                    </svg>
                                 </button>
                             </div>
                         </div>
@@ -217,8 +247,8 @@ onMounted(async () => {
                 </div>
 
                 <div class="row">
-                    <marquee behavior="" direction=""> 
-                        <h1 class="text-gray-100 text-lg"> {{ errorMsg }} </h1>
+                    <marquee behavior="" direction="">
+                        <h1 class="text-gray-100 text-lg"> {{ radioStore.radioErrMsg }} </h1>
                     </marquee>
                 </div>
 
@@ -227,7 +257,7 @@ onMounted(async () => {
                         <div>
                             <h1
                                 class="align-center text-gray-100 w-full   text-center text-4xl m-1 p-2 drop-shadow-2xl">
-                                {{ radioStore.radioName  }} 
+                                {{ radioStore.radioName }}
                             </h1>
                             <img :src="radioStore.currentRadio.cover || img" alt=""
                                 class="w-96  rounded-lg mx-auto h-80 drop-shadow-2xl" />
@@ -494,24 +524,23 @@ onMounted(async () => {
 <style>
 /* Hide scrollbar for large screens */
 @media (min-width: 769px) {
-   .hide-scrollbar::-webkit-scrollbar {
+    .hide-scrollbar::-webkit-scrollbar {
         display: none;
     }
 
-   .hide-scrollbar {
-        -ms-overflow-style: none;  /* IE and Edge */
-        scrollbar-width: none;  /* Firefox */
+    .hide-scrollbar {
+        -ms-overflow-style: none;
+        /* IE and Edge */
+        scrollbar-width: none;
+        /* Firefox */
     }
 }
 
 /* Prevent horizontal scrolling on mobile devices */
 @media (max-width: 768px) {
     #cards-section {
-        overflow-x: hidden; /* Prevent horizontal scrolling */
+        overflow-x: hidden;
+        /* Prevent horizontal scrolling */
     }
 }
 </style>
-
-
-
- 
