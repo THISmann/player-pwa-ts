@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeMount, onMounted, onUnmounted, ref, computed , watch} from "vue";
+import { onBeforeMount, onMounted, onUnmounted, ref, computed, watch, watchEffect } from "vue";
 import { ModalsContainer, useModal } from "vue-final-modal";
 import BluetoothModal from "../bleutooth/BluetoothModal.vue";
 import axios from "axios";
@@ -12,6 +12,7 @@ import QrcodeVue, { Level, RenderAs } from 'qrcode.vue';
 import qrcode from "./qrcode.vue";
 import errorNoFound from "./errorNoFound.vue";
 import errorServer from "./errorServer.vue";
+import loadingElement from "./loadingElement.vue"
 
 const radioStore = useRadioStore();
 const chatSocket = ref<WebSocket | null>(null);
@@ -34,6 +35,14 @@ const isMenuOpen = ref(false);
 const isShareOpen = ref(false);
 const loading = ref(true);
 const message = ref('');
+
+const hideLoading = () => {
+    loading.value = false;
+}
+
+const showLoading = () => {
+    loading.value = true;
+}
 
 // Background style computation
 const divStyle = computed(() => {
@@ -67,8 +76,8 @@ const getRadioMetaData = async (radioName: string) => {
         console.log(response.data);
         const responseData = response.data;
 
-        if (response.data.detail) {
-            radioStore.radioErrMsg = response.data.detail;
+        if (!response.data.is_api_available) {
+            radioStore.radioErrMsg = "Api non disponible ";
             openServerNoF();
 
         }
@@ -81,7 +90,7 @@ const getRadioMetaData = async (radioName: string) => {
         }
 
         if (responseData) {
-            backgroundImageUrl.value = responseData.cover;
+            backgroundImageUrl.value = responseData.current_track.cover;
             STREAMING_LINK.value = responseData.radio_flux;
             radioStore.currentRadio = responseData;
         }
@@ -91,12 +100,30 @@ const getRadioMetaData = async (radioName: string) => {
     }
 }
 
+// Function to check the status of the URL
+const checkUrlStatus = async () => {
+    try {
+        const response = await fetch('https://radio4.pro-fhi.net:19017/stream');
+
+        // Check if the status is not 404
+        if (response.status !== 404) {
+            console.log(`URL is accessible with status ${response.status}`);
+        }
+    } catch (error) {
+        console.error("Failed to fetch the URL:", error);
+    }
+};
+
+// checkUrlStatus();
+
 // Update metadata every minute
 setInterval(() => {
     getRadioMetaData(localStorage.getItem("radio_name") || '');
 }, 1 * 30 * 1000);
 
+getRadioMetaData(localStorage.getItem("radio_name") || '');
 // Play/Pause functionality
+console.log(audioElement.value, "audio");
 const togglePlay = () => {
     if (audioElement.value) {
         if (audioElement.value.paused) {
@@ -150,6 +177,9 @@ const openServerErr = async () => await modalErrorServer.open();
 const modalNoFound = createUseModal(errorNoFound, errorMsg.value);
 const openServerNoF = async () => await modalNoFound.open();
 
+const fluxStatus = ref('');
+
+// const 
 // Advertisements
 const showNextAdvert = () => {
     if (radioStore.currentRadio.publicities && radioStore.currentRadio.publicities.length > 0) {
@@ -181,16 +211,27 @@ const toggleShare = () => {
 // Mounted lifecycle hook
 onMounted(async () => {
     let radio_name = route.params.radio_name as string;
-    if (radio_name) {
-        localStorage.setItem("radio_name", radio_name);
-    } else {
-        radio_name = localStorage.getItem("radio_name")!;
-    }
+    // if (radio_name) {
+    //     localStorage.setItem("radio_name", radio_name);
+    // } else {
+    //     radio_name = localStorage.getItem("radio_name")!;
+    // }
+    
     document.title = radio_name;
     radioStore.radioName = radio_name;
     await getRadioMetaData(radio_name);
-    loading.value = false;
+    if (STREAMING_LINK.value !== '') {
+        audioElement.value?.play().catch(error => { loading.value = true; console.error('Failed to play audio:', error) });
+    }
     setInterval(showNextAdvert, 10000);
+    setTimeout(hideLoading, 10000); // 10000 milliseconds = 10 seconds
+});
+
+// Watch for changes in streamingLink and play the audio when it's updated
+watchEffect(() => {
+  if (STREAMING_LINK.value!== '') {
+    audioElement.value?.play().catch(error => { loading.value = true; console.error('Failed to play audio:', error) });
+  }
 });
 </script>
 <template>
@@ -259,16 +300,18 @@ onMounted(async () => {
                                 class="align-center text-gray-100 w-full   text-center text-4xl m-1 p-2 drop-shadow-2xl">
                                 {{ radioStore.radioName }}
                             </h1>
-                            <img :src="radioStore.currentRadio.cover || img" alt=""
+                            <img :src="radioStore.currentRadio.current_track.cover || img" alt=""
                                 class="w-96  rounded-lg mx-auto h-80 drop-shadow-2xl" />
 
                             <h1 class="mt-4 text-white text-sm text-center">
-                                {{ radioStore.currentRadio.artist_name }}
+                                {{ radioStore.currentRadio.current_track.artist_name }}
                             </h1>
                             <h1 class="mt-4 text-white text-center text-sm">
-                                {{ radioStore.currentRadio.title }}
+                                {{ radioStore.currentRadio.current_track.title }}
                             </h1>
-                            <audio :src="STREAMING_LINK" ref="audioElement"></audio>
+                            <audio :src="STREAMING_LINK" oncanplay="console.log('play')"
+                                oncanplaythrough="console.log('ready to play')" error="console.log('error')"
+                                onloadeddata="console.log('laoding now')" ref="audioElement"></audio>
                             <div class="mt-3 mx-80">
                                 <Vbutton v-if="play" @click="togglePlay">
                                     <svg class="fill-white" width="44px" height="44px" viewBox="0 0 24 24" fill="none"
@@ -300,7 +343,14 @@ onMounted(async () => {
                                         </g>
                                     </svg>
                                 </VButton>
+                                <div v-show="loading"
+                                    class="m-2  h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-e-transparent align-[-0.125em] text-surface motion-reduce:animate-[spin_1.5s_linear_infinite] dark:text-white"
+                                    role="status">
+                                    <span
+                                        class="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Loading...</span>
+                                </div>
                             </div>
+
                         </div>
                     </div>
                 </div>
@@ -308,7 +358,7 @@ onMounted(async () => {
                 <div class="row">
                     <div v-for="advert in radioStore.currentRadio.publicities" :key="advert.id"
                         v-show="advert === currentAdvert" class="p-1 bg-gray-200 rounded-lg m-3 shadow-2xl">
-                        <img :src="advert.image || img" class="h-80 w-full rounded-lg" alt="" />
+                        <img :src="advert.pub_image || img" class="h-80 w-full rounded-lg" alt="" />
                         <marquee behavior="" direction=""
                             class="text-left mx-1 text-md text-gray-100 bg-gray-500/25 p-1 mt-1 rounded-lg">
                             <h1>{{ advert.description }}</h1>
@@ -377,11 +427,11 @@ onMounted(async () => {
                                 <img :src="data.cover || img" class="rounded-lg h-40 " alt="" srcset="" />
                                 <div class="w-80">
                                     <h1
-                                        class="text-left mx-12 text-md text-white p-1 m-0 rounded-lg   overflow-hidden overflow-ellipsis whitespace-nowrap">
+                                        class="text-left mx-6 text-md text-white p-1 m-0 rounded-lg   overflow-hidden overflow-ellipsis whitespace-nowrap">
                                         {{ data.artist_name }}
                                     </h1>
                                     <h1
-                                        class="text-left mx-12 text-md text-white p-1 m-0 rounded-lg   overflow-hidden overflow-ellipsis whitespace-nowrap">
+                                        class="text-left mx-6 text-md text-white p-1 m-0 rounded-lg   overflow-hidden overflow-ellipsis whitespace-nowrap">
                                         {{ data.title }}
                                     </h1>
                                 </div>
