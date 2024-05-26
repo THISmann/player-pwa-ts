@@ -23,7 +23,7 @@ const router = useRouter();
 const backgroundImageUrl = ref('');
 const STREAMING_LINK = ref<string>('');
 const audioElement = ref<HTMLAudioElement | null>(null);
-const isPlaying = ref(false);
+const isPlaying = ref(true);
 const isHistoryOpen = ref(false);
 const play = ref(true);
 const playMobile = ref(true);
@@ -58,7 +58,7 @@ const divStyle = computed(() => {
 
 const errorMsg = ref('');
 // Fetch radio metadata
-const getRadioMetaData = async (radioName: string) => {
+const getRadioMetaDataOnMounted = async (radioName: string) => {
     try {
         if (!radioName) {
             console.error("Radio name is missing in localStorage");
@@ -77,17 +77,46 @@ const getRadioMetaData = async (radioName: string) => {
         const responseData = response.data;
 
         if (!response.data.is_api_available) {
-            radioStore.radioErrMsg = "Api non disponible ";
+            radioStore.radioErrMsg = "Impossible de récupérer les données, veuillez verifier les informations de votre radio";
             openServerNoF();
 
         }
 
         // Vérification si response.data est vide
         if (!response.data || Object.keys(response.data).length === 0) {
-            radioStore.radioErrMsg = "Api indisponible"
+            radioStore.radioErrMsg = "Impossible de récupérer les données, veuillez verifier les informations de votre radio"
             openServerErr();
             return;
         }
+
+        if (responseData) {
+            backgroundImageUrl.value = await responseData.current_track.cover;
+            STREAMING_LINK.value = await responseData.radio_flux;
+            radioStore.currentRadio = await responseData;
+        }
+        console.log("history", historyTrack.value);
+    } catch (error) {
+        console.error("Error fetching radio metadata:", error);
+    }
+}
+
+const getRadioMetaData = async (radioName: string) => {
+    try {
+        if (!radioName) {
+            console.error("Radio name is missing in localStorage");
+            return;
+        }
+
+        const response = await axios.get(
+            `https://admin.radiowebapp.com/api/radios/metadata/${radioName}`,
+            {
+                headers: {
+                },
+            }
+        );
+
+        console.log(response.data);
+        const responseData = response.data;
 
         if (responseData) {
             backgroundImageUrl.value = responseData.current_track.cover;
@@ -125,15 +154,14 @@ getRadioMetaData(localStorage.getItem("radio_name") || '');
 // Play/Pause functionality
 console.log(audioElement.value, "audio");
 const togglePlay = () => {
-    if (audioElement.value) {
+    if (audioElement.value) { 
         if (audioElement.value.paused) {
             audioElement.value.play();
         } else {
             audioElement.value.pause();
         }
-        isPlaying.value = !audioElement.value.paused;
-        play.value = !audioElement.value.paused;
-        playMobile.value = !audioElement.value.paused;
+        isPlaying.value = audioElement.value.paused;
+        play.value = audioElement.value.paused; 
     }
 }
 
@@ -209,17 +237,19 @@ const toggleShare = () => {
 };
 
 // Mounted lifecycle hook
-onMounted(async () => {
+onMounted(async () => { 
+
     let radio_name = route.params.radio_name as string;
-    // if (radio_name) {
-    //     localStorage.setItem("radio_name", radio_name);
-    // } else {
-    //     radio_name = localStorage.getItem("radio_name")!;
-    // }
-    
+    let radioSet = !!radio_name
+    if (radioSet) {
+        localStorage.setItem("radio_name", radio_name);
+    } else {
+        radio_name = localStorage.getItem("radio_name")!
+    }
+
     document.title = radio_name;
     radioStore.radioName = radio_name;
-    await getRadioMetaData(radio_name);
+    await getRadioMetaDataOnMounted(radio_name);
     if (STREAMING_LINK.value !== '') {
         audioElement.value?.play().catch(error => { loading.value = true; console.error('Failed to play audio:', error) });
     }
@@ -229,9 +259,9 @@ onMounted(async () => {
 
 // Watch for changes in streamingLink and play the audio when it's updated
 watchEffect(() => {
-  if (STREAMING_LINK.value!== '') {
-    audioElement.value?.play().catch(error => { loading.value = true; console.error('Failed to play audio:', error) });
-  }
+    if (STREAMING_LINK.value !== '') {
+        audioElement.value?.play().catch(error => { loading.value = true; console.error('Failed to play audio:', error) });
+    }
 });
 </script>
 <template>
@@ -288,9 +318,9 @@ watchEffect(() => {
                 </div>
 
                 <div class="row">
-                    <marquee behavior="" direction="">
+                    <!-- <marquee behavior="" direction="">
                         <h1 class="text-gray-100 text-lg"> {{ radioStore.radioErrMsg }} </h1>
-                    </marquee>
+                    </marquee> -->
                 </div>
 
                 <div class="row">
@@ -300,14 +330,14 @@ watchEffect(() => {
                                 class="align-center text-gray-100 w-full   text-center text-4xl m-1 p-2 drop-shadow-2xl">
                                 {{ radioStore.radioName }}
                             </h1>
-                            <img :src="radioStore.currentRadio.current_track.cover || img" alt=""
+                            <img :src="'radioStore.currentRadio.current_track.cover' || img" alt=""
                                 class="w-96  rounded-lg mx-auto h-80 drop-shadow-2xl" />
 
                             <h1 class="mt-4 text-white text-sm text-center">
-                                {{ radioStore.currentRadio.current_track.artist_name }}
+                                {{ 'radioStore.currentRadio.current_track.artist_name' }}
                             </h1>
                             <h1 class="mt-4 text-white text-center text-sm">
-                                {{ radioStore.currentRadio.current_track.title }}
+                                {{ 'radioStore.currentRadio.current_track.title' }}
                             </h1>
                             <audio :src="STREAMING_LINK" oncanplay="console.log('play')"
                                 oncanplaythrough="console.log('ready to play')" error="console.log('error')"

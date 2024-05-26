@@ -1,5 +1,8 @@
 <template >
+  <div> 
   <PlayerSeb />
+  </div>
+
 </template>
 
 <script lang="ts">
