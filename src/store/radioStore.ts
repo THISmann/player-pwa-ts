@@ -11,6 +11,7 @@ export const useRadioStore = defineStore("radioStore", {
     radioToken: "",
     radioFlux: "",
     radioErrMsg: "",
+    currentTrack: {},
   }),
 
   getters: {

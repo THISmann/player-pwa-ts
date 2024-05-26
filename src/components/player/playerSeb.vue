@@ -93,6 +93,7 @@ const getRadioMetaDataOnMounted = async (radioName: string) => {
             backgroundImageUrl.value = await responseData.current_track.cover;
             STREAMING_LINK.value = await responseData.radio_flux;
             radioStore.currentRadio = await responseData;
+            radioStore.currentTrack = await responseData.current_track
         }
         console.log("history", historyTrack.value);
     } catch (error) {
@@ -330,14 +331,14 @@ watchEffect(() => {
                                 class="align-center text-gray-100 w-full   text-center text-4xl m-1 p-2 drop-shadow-2xl">
                                 {{ radioStore.radioName }}
                             </h1>
-                            <img :src="'radioStore.currentRadio.current_track.cover' || img" alt=""
+                            <img :src="radioStore.currentTrack.cover || img" alt=""
                                 class="w-96  rounded-lg mx-auto h-80 drop-shadow-2xl" />
 
                             <h1 class="mt-4 text-white text-sm text-center">
-                                {{ 'radioStore.currentRadio.current_track.artist_name' }}
+                                {{ radioStore.currentTrack.artist_name }}
                             </h1>
                             <h1 class="mt-4 text-white text-center text-sm">
-                                {{ 'radioStore.currentRadio.current_track.title' }}
+                                {{ radioStore.currentTrack.title }}
                             </h1>
                             <audio :src="STREAMING_LINK" oncanplay="console.log('play')"
                                 oncanplaythrough="console.log('ready to play')" error="console.log('error')"
@@ -386,14 +387,13 @@ watchEffect(() => {
                 </div>
 
                 <div class="row">
-                    <div v-for="advert in radioStore.currentRadio.publicities" :key="advert.id"
+                    <div class="h-96 p-1 bg-gray-100 md:mx-80">
+                        <div v-for="advert in radioStore.currentRadio.publicities" :key="advert.id"
                         v-show="advert === currentAdvert" class="p-1 bg-gray-200 rounded-lg m-3 shadow-2xl">
-                        <img :src="advert.pub_image || img" class="h-80 w-full rounded-lg" alt="" />
-                        <marquee behavior="" direction=""
-                            class="text-left mx-1 text-md text-gray-100 bg-gray-500/25 p-1 mt-1 rounded-lg">
-                            <h1>{{ advert.description }}</h1>
-                        </marquee>
+                        <img :src="advert.pub_image || img" class="h-80 w-full m-1 rounded-lg" alt="" />
                     </div>
+                    </div>
+                    
                 </div>
 
                 <div class="row">
