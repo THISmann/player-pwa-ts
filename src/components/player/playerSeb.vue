@@ -155,14 +155,14 @@ getRadioMetaData(localStorage.getItem("radio_name") || '');
 // Play/Pause functionality
 console.log(audioElement.value, "audio");
 const togglePlay = () => {
-    if (audioElement.value) { 
+    if (audioElement.value) {
         if (audioElement.value.paused) {
             audioElement.value.play();
         } else {
             audioElement.value.pause();
         }
         isPlaying.value = audioElement.value.paused;
-        play.value = audioElement.value.paused; 
+        play.value = audioElement.value.paused;
     }
 }
 
@@ -238,7 +238,7 @@ const toggleShare = () => {
 };
 
 // Mounted lifecycle hook
-onMounted(async () => { 
+onMounted(async () => {
 
     let radio_name = route.params.radio_name as string;
     let radioSet = !!radio_name
@@ -287,11 +287,11 @@ watchEffect(() => {
                                         </g>
                                     </svg> </button>
                             </div>
-                            <nav v-show="isMenuOpen">
+                            <nav class="  bg-black p-2" v-show="isMenuOpen">
                                 <ul class=" items-center justify-between text-base text-white pt-4 w-96 lg:pt-0">
                                     <li v-for="(item, index) in radioStore.currentRadio.menu" :key="index"><a
                                             :href="item.link"
-                                            class="lg:p-4 py-3 px-0 block border-b-2 border-transparent hover:border-white">
+                                            class="lg:p-4 py-3 px-0 block border-b-3 border-transparent hover:border-white">
                                             {{ item.title }} </a>
                                     </li>
                                 </ul>
@@ -389,11 +389,11 @@ watchEffect(() => {
                 <div class="row">
                     <div class="h-96 p-1 bg-gray-100 md:mx-80">
                         <div v-for="advert in radioStore.currentRadio.publicities" :key="advert.id"
-                        v-show="advert === currentAdvert" class="p-1 bg-gray-200 rounded-lg m-3 shadow-2xl">
-                        <img :src="advert.pub_image || img" class="h-80 w-full m-1 rounded-lg" alt="" />
+                            v-show="advert === currentAdvert" class="p-1 bg-gray-200 rounded-lg m-3 shadow-2xl">
+                            <img :src="advert.pub_image || img" class="h-80 w-full m-1 rounded-lg" alt="" />
+                        </div>
                     </div>
-                    </div>
-                    
+
                 </div>
 
                 <div class="row">
@@ -472,10 +472,16 @@ watchEffect(() => {
                     <div class="p-1 mx-7 overflow-y-auto md:hidden" v-show="isHistoryOpen">
                         <div class="flex sm:w-full sm:h-28 border-black-300/75 bg-gray-700 opacity-70 rounded-lg shadow-2xl p-1 m-1 scroll"
                             v-for="data in radioStore.currentRadio.song_history" :key="data.id">
-                            <img :src="data.cover || img" class="rounded-lg w-24 h-24" alt="" srcset="" />
-                            <h1 class="text-left my-4 mx-1 text-sm text-white p-2">
-                                {{ data.title }}
-                            </h1>
+                            <img :src="data.cover || img" class="rounded-lg w-1/2 h-24" alt="" srcset="" />
+                            <div class="w-1/2 p-1">
+                                <h1 class="text-left my-1 mx-1 text-sm w-full text-gray-100 ">
+                                    {{ data.title }}
+                                </h1>
+                                <h4 class="text-left my-1 mx-1 text-xs w-full text-gray-400 ">
+                                    {{ data.artist_name }}
+                                </h4>
+                            </div>
+
                         </div>
                     </div>
                 </div>
