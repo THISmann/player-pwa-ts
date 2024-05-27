@@ -5,7 +5,7 @@ import BluetoothModal from "../bleutooth/BluetoothModal.vue";
 import axios from "axios"; 
 import img from "./logo.png";
 import themeColor from "./colorExtraction";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute } from "vue-router";
 import InstallButton from "./installButton.vue"; 
 import { useRadioStore } from '@/store/radioStore'; 
 
@@ -32,15 +32,7 @@ const getRadioMetaData = async (radioName: string) => {
       return;
     }
 
-    const response = await axios.get( 
-      `http://localhost:8030/api/radios/metadata/${radioName}`,
-      {
-        headers: {
-          //'Authorization': `Ekila ${localStorage.getItem("access-token")}`
-          //Authorization: `Ekila ${localStorage.getItem("access-token")}`,
-        },
-      }
-    );
+    const response = await axios.get(`http://localhost:8030/api/radios/metadata/${radioName}`);
 
     console.log(response.data);
     const responseData = response.data;
@@ -70,7 +62,6 @@ const handleMessage = (e: MessageEvent) => {
     switch (data.action) {
       case "update":
         console.log("mise a jour"); 
-        
         break;
       case "delete":
         console.log("suppression"); 
@@ -532,5 +523,3 @@ onMounted(async () => {
   </div>
 </template>
 
-<style></style>
-<!-- localStorage.setItem("access-token", route.params["access-token"]) -->
