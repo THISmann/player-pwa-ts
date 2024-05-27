@@ -469,7 +469,7 @@ watchEffect(() => {
                             </div>
                         </div>
                     </div>
-                    <div class="p-1 mx-7 overflow-y-auto md:hidden" v-show="isHistoryOpen">
+                    <div class="p-1 mx-1 overflow-y-auto md:hidden" v-show="isHistoryOpen">
                         <div class="flex sm:w-full sm:h-28 border-black-300/75 bg-gray-700 opacity-70 rounded-lg shadow-2xl p-1 m-1 scroll"
                             v-for="data in radioStore.currentRadio.song_history" :key="data.id">
                             <img :src="data.cover || img" class="rounded-lg w-1/2 h-24" alt="" srcset="" />
