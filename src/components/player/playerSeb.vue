@@ -1,18 +1,14 @@
 <script setup lang="ts">
-import { onBeforeMount, onMounted, onUnmounted, ref, computed, watch, watchEffect } from "vue";
+import { onMounted, ref, computed, watchEffect } from "vue";
 import { ModalsContainer, useModal } from "vue-final-modal";
 import BluetoothModal from "../bleutooth/BluetoothModal.vue";
 import axios from "axios";
 import img from "./logo.png";
-import themeColor from "./colorExtraction";
 import { useRoute, useRouter } from "vue-router";
-import InstallButton from "./installButton.vue";
 import { useRadioStore } from '@/store/radioStore';
-import QrcodeVue, { Level, RenderAs } from 'qrcode.vue';
 import qrcode from "./qrcode.vue";
 import errorNoFound from "./errorNoFound.vue";
 import errorServer from "./errorServer.vue";
-import loadingElement from "./loadingElement.vue"
 
 const radioStore = useRadioStore();
 const chatSocket = ref<WebSocket | null>(null);
@@ -65,13 +61,7 @@ const getRadioMetaDataOnMounted = async (radioName: string) => {
             return;
         }
 
-        const response = await axios.get(
-            `https://admin.radiowebapp.com/api/radios/metadata/${radioName}`,
-            {
-                headers: {
-                },
-            }
-        );
+        const response = await axios.get(`https://admin.radiowebapp.com/api/radios/metadata/${radioName}`);
 
         console.log(response.data);
         const responseData = response.data;
@@ -108,13 +98,7 @@ const getRadioMetaData = async (radioName: string) => {
             return;
         }
 
-        const response = await axios.get(
-            `https://admin.radiowebapp.com/api/radios/metadata/${radioName}`,
-            {
-                headers: {
-                },
-            }
-        );
+        const response = await axios.get(`https://admin.radiowebapp.com/api/radios/metadata/${radioName}`);
 
         console.log(response.data);
         const responseData = response.data;
@@ -268,13 +252,17 @@ watchEffect(() => {
 <template>
     <div class="sm:overscroll-none" :style="divStyle">
         <div class="container-fluid m-0 p-2 content bg-gray-700 opacity-80">
-            <div class="container-fluid min-h-screen">
+            <div class="container-fluid space-y-7 lg:space-y-10 min-h-screen">
                 <ModalsContainer />
                 <BluetoothModal :show="modal1.isOpen" @close="modal1.close" />
                 <div class="row">
-                    <div class="flex justify-between">
-                        <div class=" py-4 px-6  m-5">
-                            <div class="block ">
+                    <div :class="
+                        [
+                            'flex', 
+                            radioStore.currentRadio.menu?.length ? 'justify-between' : 'justify-end'
+                        ]">
+                        <div class="py-4 lg:px-6 m-5 relative" v-if="radioStore.currentRadio.menu?.length">
+                            <div class="block">
                                 <button @click="toggleMenu" class="text-white focus:outline-none">
                                     <svg fill="#ffffff" width="40px" height="40px" viewBox="0 0 32 32" version="1.1"
                                         xmlns="http://www.w3.org/2000/svg" stroke="#ffffff">
@@ -287,18 +275,22 @@ watchEffect(() => {
                                         </g>
                                     </svg> </button>
                             </div>
-                            <nav class="  bg-black p-2" v-show="isMenuOpen">
-                                <ul class=" items-center justify-between text-base text-white pt-4 w-96 lg:pt-0">
-                                    <li v-for="(item, index) in radioStore.currentRadio.menu" :key="index"><a
+                            <nav class="bg-black p-2 absolute" v-show="isMenuOpen">
+                                <ul class="text-base text-white space-y-3 min-w-32 max-w-96 lg:pt-0">
+                                    <li v-for="(item, index) in radioStore.currentRadio.menu" :key="index">
+                                        <a
                                             :href="item.link" target="_blank"
-                                            class="lg:p-4 py-3 px-0 block border-b-3 border-transparent hover:border-white">
-                                            {{ item.title }} </a>
+                                            class="lg:p-1.5 hover:border-b hover:border-b-white py-1 px-0 block border-b-3 border-transparent hover:border-white"
+                                        >
+                                            {{ item.title }}
+                                        </a>
                                     </li>
                                 </ul>
                             </nav>
+                            
                         </div>
 
-                        <div class=" py-4 px-6   m-5">
+                        <div class="py-4 lg:px-6 m-5">
                             <div class="align-self: flex-end ">
                                 <button @click="openModalQR()" class="text-white focus:outline-none ">
                                     <svg width="40px" height="40px" viewBox="0 0 24 24" fill="none"
@@ -319,20 +311,18 @@ watchEffect(() => {
                 </div>
 
                 <div class="row">
-                    <!-- <marquee behavior="" direction="">
-                        <h1 class="text-gray-100 text-lg"> {{ radioStore.radioErrMsg }} </h1>
-                    </marquee> -->
-                </div>
-
-                <div class="row">
-                    <div class=" flex overflow-hidden items-center justify-center">
+                    <div class="flex overflow-hidden items-center justify-center">
                         <div>
                             <h1
                                 class="align-center text-gray-100 w-full   text-center text-4xl m-1 p-2 drop-shadow-2xl">
                                 {{ radioStore.radioName }}
                             </h1>
-                            <img :src="radioStore.currentTrack.cover || img" alt=""
-                                class="w-96  rounded-lg mx-auto h-80 drop-shadow-2xl" />
+                            <img 
+                                :src="radioStore.currentTrack.cover ?? img"
+                                @error="($event) => $event.target.src = img"  
+                                :alt="radioStore.currentTrack.title"
+                                class="w-96  rounded-lg mx-auto h-80 drop-shadow-2xl" 
+                            />
 
                             <h1 class="mt-4 text-white text-sm text-center">
                                 {{ radioStore.currentTrack.artist_name }}
@@ -390,7 +380,7 @@ watchEffect(() => {
                     <div class="h-96 p-1 bg-gray-100 md:mx-80">
                         <div v-for="advert in radioStore.currentRadio.publicities" :key="advert.id"
                             v-show="advert === currentAdvert" class="p-1 bg-gray-200 rounded-lg m-3 shadow-2xl">
-                            <img :src="advert.pub_image || img" class="h-80 w-full m-1 rounded-lg" alt="" />
+                            <img :src="advert.pub_image ?? img" class="h-80 w-full m-1 rounded-lg" @error="($event) => $event.target.src = img"  />
                         </div>
                     </div>
 
@@ -398,7 +388,7 @@ watchEffect(() => {
 
                 <div class="row">
                     <div class="flex justify-between">
-                        <div>
+                        <div class="cursor-pointer">
                             <Vbutton @click="openModal1()">
                                 <svg width="32px" height="32px" viewBox="0 0 24 24" fill="none"
                                     xmlns="http://www.w3.org/2000/svg">
@@ -411,11 +401,11 @@ watchEffect(() => {
                                 </svg>
                             </Vbutton>
                         </div>
-                        <div class="p-2 border rounded-lg bg-blue-100 m-2" @click="toggleHistory">
-                            <h1 class="text-center">Titres récents</h1>
+                        <div class="p-2 border rounded-lg bg-blue-100 m-2 cursor-pointer" @click="toggleHistory">
+                            <h3 class="text-center">Titres récents</h3>
                         </div>
 
-                        <div>
+                        <div class="cursor-pointer">
                             <Vbutton>
                                 <svg fill="#000000" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg"
                                     xmlns:xlink="http://www.w3.org/1999/xlink" width="32px" height="32px"
@@ -451,33 +441,38 @@ watchEffect(() => {
 
                 <div class="row">
                     <div id="cards-section" v-show="isHistoryOpen" class="bg-gray-700 opacity-70 p-12 max-md:hidden">
-                        <div class="p-1 mx-7 flex flex-wrap overflow-hidden hide-scrollbar">
+                        <div class="p-1 mx-7 flex flex-wrap gap-3 overflow-y-hidden hide-scrollbar">
                             <div v-for="data in radioStore.currentRadio.song_history" :key="data.title"
-                                class="lg:w-2/5 md:w-1/2 h-44 flex px-4 m-1">
-                                <img :src="data.cover || img" class="rounded-lg h-40 " alt="" srcset="" />
-                                <div class="w-80">
+                                class="lg:w-2/5 md:w-1/2 h-44 flex items-center px-4 shadow shadow-[#F76507] rounded-md text-ellipsis overflow-x-hidden bg-gray-700"
+                            >
+                                <img 
+                                    :src="data.cover ?? img" 
+                                    class="rounded-lg h-40" 
+                                    :alt="data.title" 
+                                    @error="($event) => $event.target.src = img" 
+                                />
+                                <div class="h-full w-80">
                                     <h1
-                                        class="text-left mx-6 text-md text-white p-1 m-0 rounded-lg   overflow-hidden overflow-ellipsis whitespace-nowrap">
+                                        class="text-left mx-6 text-md text-white m-0 rounded-lg truncate text-nowrap overflow-hidden">
                                         {{ data.artist_name }}
                                     </h1>
                                     <h1
-                                        class="text-left mx-6 text-md text-white p-1 m-0 rounded-lg   overflow-hidden overflow-ellipsis whitespace-nowrap">
+                                        class="text-left mx-6 text-md text-white m-0 rounded-lg truncate text-nowrap overflow-hidden">
                                         {{ data.title }}
                                     </h1>
                                 </div>
-
                             </div>
                         </div>
                     </div>
                     <div class="p-1 mx-1 overflow-y-auto md:hidden" v-show="isHistoryOpen">
-                        <div class="flex sm:w-full sm:h-28 border-black-300/75 bg-gray-700 opacity-70 rounded-lg shadow-2xl p-1 m-1 scroll"
+                        <div class="flex gap-y-3 sm:w-full sm:h-28 border-black-300/75 bg-gray-700 opacity-70 rounded-lg shadow-2xl p-1 m-1 scroll overflow-x-hidden"
                             v-for="data in radioStore.currentRadio.song_history" :key="data.id">
-                            <img :src="data.cover || img" class="rounded-lg w-1/2 h-24" alt="" srcset="" />
+                            <img :src="data.cover ?? img" class="rounded-lg w-1/2 h-24" :alt="data.title" @error="($event) => $event.target.src = img" />
                             <div class="w-1/2 p-1">
-                                <h1 class="text-left my-1 mx-1 text-sm w-full text-gray-100 ">
+                                <h1 class="text-left my-1 mx-1 text-sm w-full text-gray-100 text-ellipsis text-nowrap overflow-hidden">
                                     {{ data.title }}
                                 </h1>
-                                <h4 class="text-left my-1 mx-1 text-xs w-full text-gray-400 ">
+                                <h4 class="text-left my-1 mx-1 text-xs w-full text-gray-400 text-ellipsis text-nowrap overflow-hidden">
                                     {{ data.artist_name }}
                                 </h4>
                             </div>
