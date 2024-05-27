@@ -290,7 +290,7 @@ watchEffect(() => {
                             <nav class="  bg-black p-2" v-show="isMenuOpen">
                                 <ul class=" items-center justify-between text-base text-white pt-4 w-96 lg:pt-0">
                                     <li v-for="(item, index) in radioStore.currentRadio.menu" :key="index"><a
-                                            :href="item.link"
+                                            :href="item.link" target="_blank"
                                             class="lg:p-4 py-3 px-0 block border-b-3 border-transparent hover:border-white">
                                             {{ item.title }} </a>
                                     </li>
