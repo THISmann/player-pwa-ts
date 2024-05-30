@@ -4,10 +4,12 @@ import { ModalsContainer, useModal } from "vue-final-modal";
 import BluetoothModal from "../bleutooth/BluetoothModal.vue";
 import axios from "axios";
 import img from "./logo.png";
+import pub from "./publicité.jpg";
 import { useRoute, useRouter } from "vue-router";
 import { useRadioStore } from '@/store/radioStore';
 import qrcode from "./qrcode.vue";
 import errorNoFound from "./errorNoFound.vue";
+import InstallButton from "./installButton.vue";
 import errorServer from "./errorServer.vue";
 
 const radioStore = useRadioStore();
@@ -17,6 +19,8 @@ const historyTrack = ref([]);
 const route = useRoute();
 const router = useRouter();
 const backgroundImageUrl = ref('');
+const PlayerArtist = ref('');
+const PlayerTitle = ref('');
 const STREAMING_LINK = ref<string>('');
 const audioElement = ref<HTMLAudioElement | null>(null);
 const isPlaying = ref(true);
@@ -52,6 +56,13 @@ const divStyle = computed(() => {
     };
 });
 
+const advertStyle = computed(() => {
+    return {
+        'background-image': `url(${pub})`, 
+        'background-position': 'center', 
+    }
+})
+
 const errorMsg = ref('');
 // Fetch radio metadata
 const getRadioMetaDataOnMounted = async (radioName: string) => {
@@ -82,6 +93,8 @@ const getRadioMetaDataOnMounted = async (radioName: string) => {
         if (responseData) {
             backgroundImageUrl.value = await responseData.current_track.cover;
             STREAMING_LINK.value = await responseData.radio_flux;
+            PlayerTitle.value = await responseData.current_track.title;
+            PlayerArtist.value = await responseData.current_track.artist_name;
             radioStore.currentRadio = await responseData;
             radioStore.currentTrack = await responseData.current_track
         }
@@ -256,12 +269,11 @@ watchEffect(() => {
                 <ModalsContainer />
                 <BluetoothModal :show="modal1.isOpen" @close="modal1.close" />
                 <div class="row">
-                    <div :class="
-                        [
-                            'flex', 
-                            radioStore.currentRadio.menu?.length ? 'justify-between' : 'justify-end'
-                        ]">
-                        <div class="py-4 lg:px-6 m-5 relative" v-if="radioStore.currentRadio.menu?.length">
+                    <div :class="[
+            'flex',  'justify-between' 
+        ]
+        ">
+                        <div class="py-4 lg:px-6 m-5 relative"  >
                             <div class="block">
                                 <button @click="toggleMenu" class="text-white focus:outline-none">
                                     <svg fill="#ffffff" width="40px" height="40px" viewBox="0 0 32 32" version="1.1"
@@ -278,16 +290,20 @@ watchEffect(() => {
                             <nav class="bg-black p-2 absolute" v-show="isMenuOpen">
                                 <ul class="text-base text-white space-y-3 min-w-32 max-w-96 lg:pt-0">
                                     <li v-for="(item, index) in radioStore.currentRadio.menu" :key="index">
-                                        <a
-                                            :href="item.link" target="_blank"
-                                            class="lg:p-1.5 hover:border-b hover:border-b-white py-1 px-0 block border-b-3 border-transparent hover:border-white"
-                                        >
+                                        <a :href="item.link" target="_blank"
+                                            class="lg:p-1.5 hover:border-b hover:border-b-white py-1 px-0 block border-b-3 border-transparent hover:border-white">
                                             {{ item.title }}
                                         </a>
                                     </li>
+                                    <li>
+
+                                        <InstallButton />
+
+                                    </li>
+
                                 </ul>
                             </nav>
-                            
+
                         </div>
 
                         <div class="py-4 lg:px-6 m-5">
@@ -317,18 +333,15 @@ watchEffect(() => {
                                 class="align-center text-gray-100 w-full   text-center text-4xl m-1 p-2 drop-shadow-2xl">
                                 {{ radioStore.radioName }}
                             </h1>
-                            <img 
-                                :src="radioStore.currentTrack.cover ?? img"
-                                @error="($event) => $event.target.src = img"  
-                                :alt="radioStore.currentTrack.title"
-                                class="w-96  rounded-lg mx-auto h-80 drop-shadow-2xl" 
-                            />
+                            <img :src="backgroundImageUrl ?? img"
+                                @error="($event) => $event.target.src = img" :alt="radioStore.currentTrack.title"
+                                class="w-96  rounded-lg mx-auto h-80 drop-shadow-2xl" />
 
                             <h1 class="mt-4 text-white text-sm text-center">
-                                {{ radioStore.currentTrack.artist_name }}
+                                {{ PlayerArtist }}
                             </h1>
                             <h1 class="mt-4 text-white text-center text-sm">
-                                {{ radioStore.currentTrack.title }}
+                                {{ PlayerTitle }}
                             </h1>
                             <audio :src="STREAMING_LINK" oncanplay="console.log('play')"
                                 oncanplaythrough="console.log('ready to play')" error="console.log('error')"
@@ -377,10 +390,11 @@ watchEffect(() => {
                 </div>
 
                 <div class="row">
-                    <div class="h-96 p-1 bg-gray-100 md:mx-80">
+                    <div class="h-96 bg-gray-100 md:mx-80 rounded-lg" :style="advertStyle">
                         <div v-for="advert in radioStore.currentRadio.publicities" :key="advert.id"
-                            v-show="advert === currentAdvert" class="p-1 bg-gray-200 rounded-lg m-3 shadow-2xl">
-                            <img :src="advert.pub_image ?? img" class="h-80 w-full m-1 rounded-lg" @error="($event) => $event.target.src = img"  />
+                            v-show="advert === currentAdvert" class=" bg-gray-200 rounded-lg  shadow-2xl">
+                            <img :src="advert.pub_image ?? img" class="h-96 w-full  rounded-lg"
+                                @error="($event) => $event.target.src = img" />
                         </div>
                     </div>
 
@@ -388,52 +402,151 @@ watchEffect(() => {
 
                 <div class="row">
                     <div class="flex justify-between">
-                        <div class="cursor-pointer">
+                        <div class="cursor-pointer mx-16">
                             <Vbutton @click="openModal1()">
                                 <svg width="32px" height="32px" viewBox="0 0 24 24" fill="none"
                                     xmlns="http://www.w3.org/2000/svg">
                                     <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
                                     <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
                                     <g id="SVGRepo_iconCarrier">
-                                        <path d="M7 17L17 7L12 2V22L17 17L7 7" stroke="#000000" stroke-width="2"
-                                            stroke-linecap="round" stroke-linejoin="round"></path>
+                                        <path
+                                            d="M14.2 9.5929L11 12V7.62345C11 6.66862 11 6.1912 11.3015 6.04C11.603 5.88879 11.9838 6.17524 12.7455 6.74814L14.2 7.84228C14.7333 8.24346 15 8.44405 15 8.71759C15 8.99112 14.7333 9.19171 14.2 9.5929Z"
+                                            stroke="#ffffff" stroke-width="1.5"></path>
+                                        <path
+                                            d="M14.2 16.1577L12.7455 17.2519C11.9838 17.8248 11.603 18.1112 11.3015 17.96C11 17.8088 11 17.3314 11 16.3766V12L14.2 14.4071C14.7333 14.8083 15 15.0089 15 15.2824C15 15.5559 14.7333 15.7565 14.2 16.1577Z"
+                                            stroke="#ffffff" stroke-width="1.5"></path>
+                                        <path
+                                            d="M8.48014 8.92383C8.16193 8.65866 7.68901 8.70165 7.42383 9.01986C7.15866 9.33807 7.20165 9.81099 7.51986 10.0762L8.48014 8.92383ZM11.4801 11.4238L8.48014 8.92383L7.51986 10.0762L10.5199 12.5762L11.4801 11.4238Z"
+                                            fill="#ffffff"></path>
+                                        <path
+                                            d="M8.48014 15.0762C8.16193 15.3413 7.68901 15.2983 7.42383 14.9801C7.15866 14.6619 7.20165 14.189 7.51986 13.9238L8.48014 15.0762ZM11.4801 12.5762L8.48014 15.0762L7.51986 13.9238L10.5199 11.4238L11.4801 12.5762Z"
+                                            fill="#ffffff"></path>
+                                        <path
+                                            d="M7 3.33782C8.47087 2.48697 10.1786 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 10.1786 2.48697 8.47087 3.33782 7"
+                                            stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"></path>
                                     </g>
                                 </svg>
                             </Vbutton>
                         </div>
-                        <div class="p-2 border rounded-lg bg-blue-100 m-2 cursor-pointer" @click="toggleHistory">
-                            <h3 class="text-center">Titres récents</h3>
+                        <div class="p-2 border rounded-lg bg-blue-100 m-2 cursor-pointer flex" @click="toggleHistory">
+                            <h3 class="text-center mx-1">Titres récents </h3>
+                            <svg width="32px" height="32px" viewBox="0 0 24 24" id="_24x24_On_Light_Recent"
+                                data-name="24x24/On Light/Recent" xmlns="http://www.w3.org/2000/svg" fill="#000000">
+                                <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                                <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                                <g id="SVGRepo_iconCarrier">
+                                    <rect id="view-box" width="24" height="24" fill="none"></rect>
+                                    <path id="Shape"
+                                        d="M9.682,18.75a.75.75,0,0,1,.75-.75,8.25,8.25,0,1,0-6.189-2.795V12.568a.75.75,0,0,1,1.5,0v4.243a.75.75,0,0,1-.751.75H.75a.75.75,0,0,1,0-1.5H3a9.75,9.75,0,1,1,7.433,3.44A.75.75,0,0,1,9.682,18.75Zm2.875-4.814L9.9,11.281a.754.754,0,0,1-.22-.531V5.55a.75.75,0,1,1,1.5,0v4.889l2.436,2.436a.75.75,0,1,1-1.061,1.06Z"
+                                        transform="translate(1.568 2.25)" fill="#141124"></path>
+                                </g>
+                            </svg>
                         </div>
 
-                        <div class="cursor-pointer">
+                        <div class="cursor-pointer mx-16">
                             <Vbutton>
-                                <svg fill="#000000" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg"
-                                    xmlns:xlink="http://www.w3.org/1999/xlink" width="32px" height="32px"
-                                    viewBox="0 0 32 32" xml:space="preserve">
-                                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
-                                    <g id="SVGRepo_iconCarrier">
-                                        <g>
+                                <a   target="_blank">
+                                    <svg fill="#ffffff" height="32px" width="32px" version="1.1" id="Layer_1"
+                                        xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                                        viewBox="0 0 472.574 472.574" xml:space="preserve">
+                                        <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                                        <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round">
+                                        </g>
+                                        <g id="SVGRepo_iconCarrier">
                                             <g>
-                                                <path
-                                                    d="M6.501,6.249c0.44,0.335,0.892,0.654,1.361,0.939C7.623,7.764,7.411,8.372,7.221,9h1.927 c0.11-0.322,0.215-0.649,0.34-0.955C10.381,8.454,11.312,8.766,12.267,9h7.471c0.967-0.235,1.912-0.554,2.812-0.972 c0.125,0.31,0.229,0.644,0.343,0.972h1.891c-0.189-0.629-0.4-1.235-0.641-1.812c0.471-0.285,0.924-0.604,1.36-0.939 c0.84,0.818,1.572,1.743,2.179,2.751h2.688c-2.604-5.318-8.057-9-14.368-9C9.689,0,4.238,3.682,1.635,9h2.686 C4.929,7.992,5.661,7.065,6.501,6.249z M24.109,5.073c-0.246,0.176-0.493,0.349-0.75,0.509c-0.319-0.587-0.666-1.144-1.041-1.646 C22.95,4.266,23.544,4.651,24.109,5.073z M21.794,6.422c-0.808,0.371-1.64,0.67-2.496,0.88c-0.239-1.728-0.584-3.396-1.075-4.672 C19.605,3.329,20.829,4.655,21.794,6.422z M15.82,2.379c0.061-0.001,0.12-0.008,0.182-0.008s0.121,0.007,0.182,0.008 c0.438,0.717,0.965,2.507,1.354,5.229c-0.509,0.06-1.021,0.098-1.535,0.098c-0.517,0-1.028-0.038-1.535-0.098 C14.855,4.886,15.382,3.096,15.82,2.379z M13.771,2.658c-0.485,1.272-0.827,2.927-1.065,4.645c-0.843-0.206-1.661-0.5-2.453-0.86 C11.214,4.692,12.421,3.366,13.771,2.658z M9.684,3.936C9.31,4.438,8.965,4.996,8.642,5.582C8.386,5.423,8.139,5.25,7.893,5.074 C8.459,4.651,9.052,4.266,9.684,3.936z">
-                                                </path>
-                                                <path
-                                                    d="M25.503,25.752c-0.438-0.336-0.894-0.654-1.36-0.941c0.237-0.574,0.45-1.182,0.641-1.811h-1.891 c-0.109,0.328-0.216,0.66-0.341,0.971c-0.901-0.418-1.848-0.734-2.813-0.971h-7.47c-0.955,0.234-1.885,0.547-2.778,0.955 C9.364,23.648,9.26,23.32,9.149,23H7.223c0.189,0.629,0.401,1.236,0.64,1.812c-0.47,0.285-0.921,0.604-1.361,0.938 C5.663,24.934,4.931,24.008,4.325,23H1.638c2.603,5.316,8.054,9,14.366,9c6.312,0,11.764-3.684,14.367-9h-2.688 C27.075,24.008,26.343,24.934,25.503,25.752z M7.893,26.928c0.246-0.176,0.494-0.35,0.749-0.508 c0.323,0.586,0.668,1.143,1.042,1.645C9.052,27.734,8.459,27.35,7.893,26.928z M10.251,25.559c0.792-0.356,1.61-0.653,2.453-0.858 c0.238,1.719,0.58,3.368,1.065,4.645C12.421,28.635,11.214,27.307,10.251,25.559z M16.184,29.621 c-0.061,0.002-0.12,0.008-0.182,0.008s-0.121-0.006-0.182-0.008c-0.438-0.717-0.966-2.508-1.354-5.229 c0.507-0.06,1.019-0.099,1.535-0.099c0.517,0,1.028,0.039,1.536,0.099C17.146,27.113,16.622,28.904,16.184,29.621z M18.223,29.369 c0.491-1.275,0.836-2.943,1.075-4.672c0.856,0.211,1.688,0.51,2.496,0.881C20.829,27.346,19.605,28.672,18.223,29.369z M22.318,28.064c0.375-0.504,0.722-1.062,1.041-1.646c0.257,0.16,0.504,0.334,0.75,0.51C23.544,27.35,22.95,27.734,22.318,28.064z ">
-                                                </path>
-                                                <path
-                                                    d="M4.795,19.18l0.637-2.236c0.169-0.596,0.299-1.183,0.416-1.977h0.026c0.13,0.78,0.247,1.354,0.403,1.977l0.598,2.236 h1.859l1.95-6.355H8.748l-0.546,2.521c-0.143,0.729-0.273,1.443-0.364,2.171H7.812c-0.13-0.729-0.299-1.441-0.468-2.158 l-0.637-2.534h-1.56l-0.676,2.612c-0.156,0.623-0.338,1.353-0.468,2.08H3.977c-0.104-0.729-0.234-1.431-0.364-2.094l-0.507-2.601 H1.09l1.846,6.357h1.859V19.18z">
-                                                </path>
-                                                <path
-                                                    d="M18.314,15.344c-0.145,0.729-0.272,1.443-0.362,2.172h-0.027c-0.129-0.729-0.299-1.442-0.467-2.159l-0.64-2.534h-1.56 l-0.676,2.612c-0.156,0.624-0.338,1.353-0.468,2.081h-0.026c-0.104-0.729-0.234-1.432-0.364-2.095l-0.507-2.601h-2.015 l1.846,6.357h1.859l0.637-2.235c0.169-0.599,0.299-1.184,0.416-1.978h0.026c0.13,0.78,0.248,1.354,0.404,1.978l0.598,2.235h1.859 l1.947-6.357h-1.938L18.314,15.344z">
-                                                </path>
-                                                <path
-                                                    d="M28.43,15.344c-0.144,0.729-0.273,1.443-0.363,2.172h-0.025c-0.129-0.729-0.3-1.442-0.469-2.159l-0.637-2.534h-1.562 l-0.677,2.612c-0.155,0.624-0.338,1.353-0.469,2.081h-0.024c-0.104-0.729-0.233-1.432-0.363-2.095l-0.508-2.601h-2.017 l1.849,6.357h1.856l0.64-2.235c0.168-0.599,0.299-1.184,0.416-1.978h0.024c0.129,0.78,0.246,1.354,0.402,1.978l0.598,2.235h1.859 l1.949-6.357h-1.938L28.43,15.344z">
-                                                </path>
+                                                <g>
+                                                    <path
+                                                        d="M20.045,31.158v164.529h452.529V31.158H20.045z M159.157,157.458l-19.677,0.19l-8.331-26.445l-8.327,26.445l-19.676-0.19 L78.966,75.177l19.736-5.805l14.655,49.858l7.985-25.361h19.615l7.991,25.361l14.649-49.858l19.736,5.805L159.157,157.458z M274.346,157.458l-19.676,0.19l-8.327-26.445l-8.327,26.445l-19.676-0.19L194.16,75.177l19.737-5.805l14.654,49.858l7.985-25.361 h19.616l7.985,25.361l14.654-49.858l19.737,5.805L274.346,157.458z M389.541,157.458l-19.677,0.19l-8.327-26.445l-8.331,26.445 l-19.677-0.19l-24.175-82.281l19.736-5.805l14.65,49.858l7.989-25.361h19.617l7.984,25.361l14.654-49.858l19.737,5.805 L389.541,157.458z">
+                                                    </path>
+                                                </g>
+                                            </g>
+                                            <g>
+                                                <g>
+                                                    <path
+                                                        d="M113.541,357.573c16.264,45.582,42.02,77.652,71.093,83.843V340.194C159.692,341.481,135.693,347.382,113.541,357.573z">
+                                                    </path>
+                                                </g>
+                                            </g>
+                                            <g>
+                                                <g>
+                                                    <path
+                                                        d="M95.773,257.406c0.804,28.69,4.839,55.988,11.527,80.355c24.154-10.756,50.259-16.875,77.335-18.139v-62.217H95.773z">
+                                                    </path>
+                                                </g>
+                                            </g>
+                                            <g>
+                                                <g>
+                                                    <path
+                                                        d="M96.936,216.265c-0.566,6.762-0.969,13.62-1.164,20.571h88.862v-20.571H96.936z">
+                                                    </path>
+                                                </g>
+                                            </g>
+                                            <g>
+                                                <g>
+                                                    <path
+                                                        d="M2.284,216.265C1.209,223.049,0.359,229.893,0,236.836h75.208c0.175-6.976,0.607-13.801,1.12-20.571H2.284z">
+                                                    </path>
+                                                </g>
+                                            </g>
+                                            <g>
+                                                <g>
+                                                    <path
+                                                        d="M94.768,367.53c-11.161,6.717-21.679,14.591-31.461,23.579c20.247,18.607,43.683,32.499,69.148,41.08 C117.348,415.881,104.454,393.908,94.768,367.53z">
+                                                    </path>
+                                                </g>
+                                            </g>
+                                            <g>
+                                                <g>
+                                                    <path
+                                                        d="M75.208,257.406H0c2.301,44.362,19.368,85.939,48.877,119.065c12.164-11.252,25.331-21.021,39.411-29.067 C80.589,320.42,76.023,289.957,75.208,257.406z">
+                                                    </path>
+                                                </g>
+                                            </g>
+                                            <g>
+                                                <g>
+                                                    <path
+                                                        d="M387.553,216.265H313.51c0.513,6.769,0.943,13.595,1.118,20.571h75.209C389.477,229.893,388.629,223.049,387.553,216.265z ">
+                                                    </path>
+                                                </g>
+                                            </g>
+                                            <g>
+                                                <g>
+                                                    <path
+                                                        d="M314.63,257.406c-0.815,32.551-5.382,63.014-13.081,89.998c14.08,8.047,27.247,17.815,39.411,29.069 c29.515-33.144,46.576-74.716,48.877-119.067H314.63z">
+                                                    </path>
+                                                </g>
+                                            </g>
+                                            <g>
+                                                <g>
+                                                    <path
+                                                        d="M295.07,367.53c-9.687,26.378-22.582,48.352-37.688,64.662c25.47-8.583,48.912-22.476,69.152-41.081 C316.751,382.122,306.231,374.247,295.07,367.53z">
+                                                    </path>
+                                                </g>
+                                            </g>
+                                            <g>
+                                                <g>
+                                                    <path
+                                                        d="M205.204,257.406v62.217c27.075,1.263,53.181,7.383,77.335,18.139c6.688-24.367,10.721-51.666,11.526-80.355H205.204z">
+                                                    </path>
+                                                </g>
+                                            </g>
+                                            <g>
+                                                <g>
+                                                    <path
+                                                        d="M205.204,340.194v101.222c29.073-6.191,54.829-38.261,71.093-83.843C254.145,347.382,230.146,341.481,205.204,340.194z">
+                                                    </path>
+                                                </g>
+                                            </g>
+                                            <g>
+                                                <g>
+                                                    <path
+                                                        d="M292.901,216.265h-87.698v20.571h88.861C293.869,229.885,293.468,223.028,292.901,216.265z">
+                                                    </path>
+                                                </g>
                                             </g>
                                         </g>
-                                    </g>
-                                </svg>
+                                    </svg>
+                                </a>
                             </Vbutton>
                         </div>
                     </div>
@@ -443,14 +556,9 @@ watchEffect(() => {
                     <div id="cards-section" v-show="isHistoryOpen" class="bg-gray-700 opacity-70 p-12 max-md:hidden">
                         <div class="p-1 mx-7 flex flex-wrap gap-3 overflow-y-hidden hide-scrollbar">
                             <div v-for="data in radioStore.currentRadio.song_history" :key="data.title"
-                                class="lg:w-2/5 md:w-1/2 h-44 flex items-center px-4 shadow shadow-[#F76507] rounded-md text-ellipsis overflow-x-hidden bg-gray-700"
-                            >
-                                <img 
-                                    :src="data.cover ?? img" 
-                                    class="rounded-lg h-40" 
-                                    :alt="data.title" 
-                                    @error="($event) => $event.target.src = img" 
-                                />
+                                class="lg:w-2/5 md:w-1/2 h-44 flex items-center px-4 shadow shadow-[#F76507] rounded-md text-ellipsis overflow-x-hidden bg-gray-700">
+                                <img :src="data.cover ?? img" class="rounded-lg h-40" :alt="data.title"
+                                    @error="($event) => $event.target.src = img" />
                                 <div class="h-full w-80">
                                     <h1
                                         class="text-left mx-6 text-md text-white m-0 rounded-lg truncate text-nowrap overflow-hidden">
@@ -467,12 +575,15 @@ watchEffect(() => {
                     <div class="p-1 mx-1 overflow-y-auto md:hidden" v-show="isHistoryOpen">
                         <div class="flex gap-y-3 sm:w-full sm:h-28 border-black-300/75 bg-gray-700 opacity-70 rounded-lg shadow-2xl p-1 m-1 scroll overflow-x-hidden"
                             v-for="data in radioStore.currentRadio.song_history" :key="data.id">
-                            <img :src="data.cover ?? img" class="rounded-lg w-1/2 h-24" :alt="data.title" @error="($event) => $event.target.src = img" />
+                            <img :src="data.cover ?? img" class="rounded-lg w-1/2 h-24" :alt="data.title"
+                                @error="($event) => $event.target.src = img" />
                             <div class="w-1/2 p-1">
-                                <h1 class="text-left my-1 mx-1 text-sm w-full text-gray-100 text-ellipsis text-nowrap overflow-hidden">
+                                <h1
+                                    class="text-left my-1 mx-1 text-sm w-full text-gray-100 text-ellipsis text-nowrap overflow-hidden">
                                     {{ data.title }}
                                 </h1>
-                                <h4 class="text-left my-1 mx-1 text-xs w-full text-gray-400 text-ellipsis text-nowrap overflow-hidden">
+                                <h4
+                                    class="text-left my-1 mx-1 text-xs w-full text-gray-400 text-ellipsis text-nowrap overflow-hidden">
                                     {{ data.artist_name }}
                                 </h4>
                             </div>

@@ -1,6 +1,6 @@
 <template>
     <!-- Your template code -->
-    <button class="bg-green-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" v-if="!installed" @click="installPWA">Install App </button>
+    <button class="  text-white font-bold  rounded" v-if="!installed" @click="installPWA">Installez l'App </button>
   </template>
   
   <script lang="ts">
@@ -37,7 +37,7 @@ declare global {
       });
   
       const installPWA = async () => { 
-        alert('installé la pwa')
+         alert('installez la pwa')
         if (!deferredPrompt) return;
         deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
