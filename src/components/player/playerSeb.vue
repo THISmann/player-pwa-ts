@@ -402,7 +402,7 @@ watchEffect(() => {
 
                 <div class="row">
                     <div class="flex justify-between">
-                        <div class="cursor-pointer my-4 mx-16">
+                        <div class="cursor-pointer my-4 md:mx-24 mx-8">
                             <Vbutton @click="openModal1()">
                                 <svg width="32px" height="32px" viewBox="0 0 24 24" fill="none"
                                     xmlns="http://www.w3.org/2000/svg">
@@ -428,7 +428,7 @@ watchEffect(() => {
                                 </svg>
                             </Vbutton>
                         </div>
-                        <div class="p-2 border rounded-lg bg-blue-100 m-2 cursor-pointer flex mx-16" @click="toggleHistory">
+                        <div class="p-2 border rounded-lg bg-blue-100 m-2 cursor-pointer flex md:mx-24 mx-8" @click="toggleHistory">
                             <h3 class="text-center mx-1">Titres récents </h3>
                             <svg width="32px" height="32px" viewBox="0 0 24 24" id="_24x24_On_Light_Recent"
                                 data-name="24x24/On Light/Recent" xmlns="http://www.w3.org/2000/svg" fill="#000000">
