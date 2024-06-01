@@ -5,13 +5,12 @@
             <button @click="openQrCodeInBrowser">Open QR Code</button>
         </div>
     </VueFinalModal>
-
 </template>
 
 <script setup lang="ts">
 import { defineProps } from 'vue';
-import QrcodeVue, { Level, RenderAs } from 'qrcode.vue';
-import { onBeforeMount, onMounted, onUnmounted, ref } from "vue";
+import QrcodeVue from 'qrcode.vue';
+import { ref } from "vue";
 import { useRadioStore } from '@/store/radioStore';
 import { VueFinalModal } from 'vue-final-modal';
 const radioStore = useRadioStore();
@@ -22,11 +21,6 @@ const qrcodeUrl = ref('');
 // Generate the QR code URL for the specified URL
 const url = `https://stream.radiowebapp.com:8040/${radioStore.radioName}`;
 qrcodeUrl.value = url;
-
-// Define the props this component accepts
-const props = defineProps({
-    qrUrl: String,
-});
 
 // Method to open the QR code URL in a new browser tab
 const openQrCodeInBrowser = () => {
