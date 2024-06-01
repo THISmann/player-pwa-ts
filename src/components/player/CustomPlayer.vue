@@ -214,18 +214,27 @@ const getRadioMetaData = async (radioName: string) => {
             return;
         }
 
-        if (currentRadio.value) {
-            streamingLink.value = await currentRadio.value.radio_flux;
-            radioStore.currentRadio = await currentRadio.value;
-            radioStore.currentTrack = await currentRadio.value.current_track
+        if (streamingLink.value !== currentRadio.value.radio_flux) {
+            streamingLink.value = currentRadio.value.radio_flux;
         }
+
+        if (radioStore.currentRadio !== currentRadio.value) {
+            radioStore.currentRadio = currentRadio.value
+        }
+
+        if (radioStore.currentTrack !== currentRadio.value.current_track) {
+            radioStore.currentTrack = currentRadio.value.current_track;
+        }
+
     } catch (error: unknown) {
         console.error("Error fetching radio metadata:", error);
     } finally {
         const url = currentRadio.value?.current_track.cover ?? cover.value;
-        cover.value = url;
-        setRadioIcon(url);
-        setBackgroundImage(url);
+        if(cover.value !== url) {
+            cover.value = url;
+            setRadioIcon(url);
+            setBackgroundImage(url);
+        }
     }
 }
 
