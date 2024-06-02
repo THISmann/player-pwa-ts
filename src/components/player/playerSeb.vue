@@ -199,7 +199,6 @@ const createUseModal = (component: any, title: string) => {
             },
         },
     });
-
     return { open, close, options, patchOptions };
 };
 
@@ -211,6 +210,8 @@ const openModalQR = async () => await modalQR.open();
 
 const modalHistorique = createUseModal(historique, "Qr Code");
 const openModalHis = async () => await modalHistorique.open();
+const modalClose = console.log('close')
+//async () => await modalHistorique.close();
 
 const modalErrorServer = createUseModal(errorServer, errorMsg.value);
 const openServerErr = async () => await modalErrorServer.open();
@@ -281,7 +282,7 @@ watchEffect(() => {
     <div class="sm:overscroll-none" :style="divStyle">
         <div class="container-fluid m-0 p-2 content bg-gray-700 opacity-80">
             <div class="container-fluid space-y-7 lg:space-y-10 min-h-screen">
-                <ModalsContainer />
+                <ModalsContainer @close-event="modalClose" />
                 <BluetoothModal :show="modal1.isOpen" @close="modal1.close" />
                 <div class="row">
                     <div :class="[

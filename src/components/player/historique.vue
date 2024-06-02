@@ -1,6 +1,11 @@
 <template>
-    <VueFinalModal class="flex justify-center items-center w-full p-8">
-        <div class="grid grid-cols-1 gap-x-4 gap-y-4 bg-white p-3 rounded-lg">
+    <VueFinalModal   class="flex justify-center items-center w-full p-8">
+        <div class="grid grid-cols-1 gap-x-4 gap-y-4 bg-white p-3 rounded-lg  m-12">
+            <!-- <button class="ml-4 text-gray-500 hover:text-gray-700" @click="emitEventGeneral">  
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button> -->
             <div class="row">
                 <div id="cards-section"  class="bg-gray-700 opacity-70 p-12 max-md:hidden">
                     <div class="p-1 mx-7 flex flex-wrap gap-3 overflow-y-hidden hide-scrollbar">
@@ -49,11 +54,19 @@
 <script setup lang="ts">
 import { defineProps } from 'vue';
 import QrcodeVue, { Level, RenderAs } from 'qrcode.vue';
-import { onBeforeMount, onMounted, onUnmounted, ref } from "vue";
+import { onBeforeMount, onMounted, onUnmounted, ref ,defineEmits } from "vue";
 import { useRadioStore } from '@/store/radioStore';
 import { VueFinalModal } from 'vue-final-modal';
 const radioStore = useRadioStore();
 import img from "./logo.png";
 
+const showModal = ref(true);
+const emit = defineEmits(['close-event'])
+
+const emitEventGeneral = () => {
+  emit('close-event');
+};
+
+ 
 
 </script>
