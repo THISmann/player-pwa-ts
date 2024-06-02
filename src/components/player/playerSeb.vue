@@ -76,7 +76,7 @@ const getRadioMetaDataOnMounted = async (radioName: string) => {
 
         const response = await axios.get(`https://admin.radiowebapp.com/api/radios/metadata/${radioName}`);
 
-        console.log(response.data);
+        ////console.log(response.data);
         const responseData = response.data;
 
         if (!response.data.is_api_available) {
@@ -100,7 +100,7 @@ const getRadioMetaDataOnMounted = async (radioName: string) => {
             radioStore.currentRadio = await responseData;
             radioStore.currentTrack = await responseData.current_track
         }
-        console.log("history", historyTrack.value);
+        //console.log("history", historyTrack.value);
     } catch (error) {
         console.error("Error fetching radio metadata:", error);
     }
@@ -125,7 +125,7 @@ const getRadioMetaData = async (radioName: string) => {
 
         const response = await axios.get(`https://admin.radiowebapp.com/api/radios/metadata/${radioName}`);
 
-        console.log(response.data);
+        //console.log(response.data);
         const responseData = response.data;
 
         if (responseData) {
@@ -133,7 +133,7 @@ const getRadioMetaData = async (radioName: string) => {
             STREAMING_LINK.value = responseData.radio_flux;
             radioStore.currentRadio = responseData;
         }
-        console.log("history", historyTrack.value);
+        //console.log("history", historyTrack.value);
     } catch (error) {
         console.error("Error fetching radio metadata:", error);
     }
@@ -146,7 +146,7 @@ const checkUrlStatus = async () => {
 
         // Check if the status is not 404
         if (response.status !== 404) {
-            console.log(`URL is accessible with status ${response.status}`);
+            //console.log(`URL is accessible with status ${response.status}`);
         }
     } catch (error) {
         console.error("Failed to fetch the URL:", error);
@@ -162,7 +162,7 @@ setInterval(() => {
 
 getRadioMetaData(localStorage.getItem("radio_name") || '');
 // Play/Pause functionality
-console.log(audioElement.value, "audio");
+//console.log(audioElement.value, "audio");
 const togglePlay = () => {
     if (audioElement.value) {
         if (audioElement.value.paused) {
@@ -210,7 +210,7 @@ const openModalQR = async () => await modalQR.open();
 
 const modalHistorique = createUseModal(historique, "Qr Code");
 const openModalHis = async () => await modalHistorique.open();
-const modalClose = console.log('close')
+//const modalClose = //console.log('close')
 //async () => await modalHistorique.close();
 
 const modalErrorServer = createUseModal(errorServer, errorMsg.value);
