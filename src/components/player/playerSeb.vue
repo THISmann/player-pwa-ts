@@ -8,6 +8,7 @@ import pub from "./publicité.jpg";
 import { useRoute, useRouter } from "vue-router";
 import { useRadioStore } from '@/store/radioStore';
 import qrcode from "./qrcode.vue";
+import historique from "./historique.vue";
 import errorNoFound from "./errorNoFound.vue";
 import InstallButton from "./installButton.vue";
 import errorServer from "./errorServer.vue";
@@ -196,6 +197,9 @@ const openModal1 = async () => await modal1.open();
 
 const modalQR = createUseModal(qrcode, "Qr Code");
 const openModalQR = async () => await modalQR.open();
+
+const modalHistorique = createUseModal(historique, "Qr Code");
+const openModalHis = async () => await modalHistorique.open();
 
 const modalErrorServer = createUseModal(errorServer, errorMsg.value);
 const openServerErr = async () => await modalErrorServer.open();
@@ -428,7 +432,7 @@ watchEffect(() => {
                                 </svg>
                             </Vbutton>
                         </div>
-                        <div class="p-2 border rounded-lg bg-blue-100 m-2 cursor-pointer flex md:mx-24 mx-8" @click="toggleHistory">
+                        <div class="p-2 border rounded-lg bg-blue-100 m-2 cursor-pointer flex md:mx-24 mx-8" @click="openModalHis">
                             <h3 class="text-center mx-1">Titres récents </h3>
                             <svg width="32px" height="32px" viewBox="0 0 24 24" id="_24x24_On_Light_Recent"
                                 data-name="24x24/On Light/Recent" xmlns="http://www.w3.org/2000/svg" fill="#000000">
@@ -490,122 +494,6 @@ watchEffect(() => {
         </div>
     </div>
 </template>
-
-<!-- <template>
-    <div :style="divStyle">
-        <div class="container-fluid m-0 p-2 content">
-            <div class="container-fluid min-h-screen">
-                <ModalsContainer />
-                <BluetoothModal :show="modal1.isOpen" @close="modal1.close" />
-                <div class="row">
-                    <div class="flex justify-between">
-                        <div class="py-4 px-6 m-5">n
-                            <div class="block">
-                                <button @click="toggleMenu" class="text-white focus:outline-none">
-                                n
-                                </button>
-                            </div> 
-                            <nav v-show="isMenuOpen">
-                                <ul class="items-center justify-between text-base text-white pt-4 w-96 lg:pt-0">
-                                    <li v-for="(item, index) in radioStore.currentRadio.menu" :key="index">
-                                        <a :href="item.link" class="lg:p-4 py-3 px-0 block border-b-2 border-transparent hover:border-white">
-                                            SITE {{ item.title }}
-                                        </a>
-                                    </li>
-                                </ul>
-                            </nav>
-                        </div>
-
-                        <div class="py-4 px-6 m-5"> 
-                            <div class="align-self: flex-end">
-                                <button @click="openModalQR()" class="text-white focus:outline-none">
-                                       </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <marquee behavior="" direction="">
-                        <h1 class="text-gray-100 text-lg">{{ errorMsg }}</h1>
-                    </marquee>
-                </div>
-
-              <div class="row">
-                    <div class="flex overflow-hidden items-center justify-center">
-                        <div>
-                            <h1 class="align-center text-gray-100 w-auto sm:w-auto bg-gray-700 opacity-50 text-center text-5xl m-1 p-2 drop-shadow-2xl">
-                                {{ radioStore.radioName }}
-                            </h1>
-                            <img :src="radioStore.currentRadio.cover || img" alt="" class="w-96 rounded-lg mx-auto h-80 drop-shadow-2xl" />
-                            <h1 class="mt-4 text-white text-sm text-center">{{ radioStore.currentRadio.artist_name }}</h1>
-                            <h1 class="mt-4 text-white text-center text-sm">{{ radioStore.currentRadio.title }}</h1>
-                            <audio :src="STREAMING_LINK" ref="audioElement"></audio>
-                            <div class="mt-3 mx-80">
-                                <VButton v-if="play" @click="togglePlay"> 
-                                </VButton>
-
-                                <VButton v-if="!play" @click="togglePlay"> 
-                                </VButton>
-                            </div>
-                        </div>
-                    </div>
-                </div> 
-
-                <div class="row">
-                    <div v-for="advert in radioStore.currentRadio.publicities" :key="advert.id" v-show="advert === currentAdvert" class="p-1 bg-gray-200 rounded-lg m-3 shadow-2xl">
-                        <img :src="advert.image || img" class="h-80 w-full rounded-lg" alt="" />
-                        <marquee behavior="" direction="" class="text-left mx-1 text-md text-gray-100 bg-gray-500/25 p-1 mt-1 rounded-lg">
-                            <h1>{{ advert.description }}</h1>
-                        </marquee>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="flex justify-between">
-                        <div>
-                            <VButton @click="openModal1()"> 
-                            </VButton>
-                        </div>
-                        <div class="p-2 border rounded-lg bg-blue-100 m-2" @click="toggleHistory">
-                            <h1 class="text-center">Titres récents</h1>
-                        </div>
-
-                        <div>
-                            <VButton> 
-                            </VButton>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div id="cards-section" v-show="isHistoryOpen" class="bg-gray-700 opacity-50 p-12 max-md:hidden">
-                        <div class="p-1 mx-7 flex flex-wrap flow-x-scroll hide-scrollbar">
-                            <div v-for="data in radioStore.currentRadio.song_history" :key="data.title" class="lg:w-2/5 md:w-1/2 h-44 flex px-4 m-1">
-                                <img :src="data.cover || img" class="rounded-lg h-40" alt="" />
-                                <div class="w-80">
-                                    <h1 class="text-left mx-12 text-md text-gray-100 p-1 m-0 rounded-lg overflow-hidden overflow-ellipsis whitespace-nowrap">
-                                        {{ data.artist_name }}
-                                    </h1>
-                                    <h1 class="text-left mx-12 text-md text-gray-100 p-1 m-0 rounded-lg overflow-hidden overflow-ellipsis whitespace-nowrap">
-                                        {{ data.title }}
-                                    </h1>
-                                </div>
-                            </div>
-                        </div>
-                    </div>  
-                     <div class="p-1 mx-7 overflow-y-auto md:hidden" v-show="isHistoryOpen">
-                        <div class="flex sm:w-full sm:h-28 border-black-300/75 bg-gray-700 opacity-50 rounded-lg shadow-2xl p-1 m-1 scroll" v-for="data in radioStore.currentRadio.song_history" :key="data.id">
-                            <img :src="data.cover || img" class="rounded-lg w-24 h-24" alt="" />
-                            <h1 class="text-left my-4 mx-1 text-sm text-gray-400 p-2">{{ data.title }}</h1>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </div>
-</template> -->
 
 <style>
 /* Hide scrollbar for large screens */
