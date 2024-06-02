@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { onMounted, ref, computed, watchEffect } from "vue";
+import { onMounted, ref, computed, watchEffect, watch } from "vue";
 import { ModalsContainer, useModal } from "vue-final-modal";
 import BluetoothModal from "../bleutooth/BluetoothModal.vue";
 import axios from "axios";
 import img from "./logo.png";
-import pub from "./publicité.jpg";
+import pub from "./publicité.jpeg";
 import { useRoute, useRouter } from "vue-router";
 import { useRadioStore } from '@/store/radioStore';
 import qrcode from "./qrcode.vue";
@@ -61,6 +61,7 @@ const advertStyle = computed(() => {
     return {
         'background-image': `url(${pub})`, 
         'background-position': 'center', 
+        'background-size': 'cover',
     }
 })
 
@@ -104,6 +105,16 @@ const getRadioMetaDataOnMounted = async (radioName: string) => {
         console.error("Error fetching radio metadata:", error);
     }
 }
+
+// Watch for changes in currentRadio and update the other properties
+watch(() => radioStore.currentRadio, (newValue) => {
+    if (newValue && newValue.current_track) {
+        PlayerArtist.value = newValue.current_track.artist_name;
+        PlayerTitle.value = newValue.current_track.title;
+        backgroundImageUrl.value = newValue.current_track.cover;
+        STREAMING_LINK.value = newValue.radio_flux;
+    }
+}, { deep: true });
 
 const getRadioMetaData = async (radioName: string) => {
     try {

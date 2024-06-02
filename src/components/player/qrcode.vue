@@ -2,7 +2,8 @@
     <VueFinalModal class="flex justify-center items-center w-full p-1">
         <div class="grid grid-cols-1 gap-x-4 gap-y-4 bg-white p-6 rounded-lg">
             <qrcode-vue :value="qrcodeUrl" level="H" />
-            <button @click="openQrCodeInBrowser">Open QR Code</button>
+            <!-- <button @click="openQrCodeInBrowser">Open QR Code</button> -->
+            <button @click="shareUrl"> Partagez l'application </button> 
         </div>
     </VueFinalModal>
 
@@ -27,6 +28,25 @@ qrcodeUrl.value = url;
 const props = defineProps({
     qrUrl: String,
 });
+
+ 
+// Method to share the URL using the navigator.share API
+const shareUrl = async () => {
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: 'Partagez l\'application',
+                text: 'Découvrez cette application',
+                url: qrcodeUrl.value,
+            });
+        } catch (error) {
+            console.error('Erreur lors du partage de l\'URL:', error);
+        }
+    } else {
+        console.error('navigator.share n\'est pas pris en charge');
+    }
+};
+
 
 // Method to open the QR code URL in a new browser tab
 const openQrCodeInBrowser = () => {

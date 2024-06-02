@@ -1,6 +1,6 @@
 <template>
-    <VueFinalModal class="flex justify-center items-center w-full p-1">
-        <div class="grid grid-cols-1 gap-x-4 gap-y-4 bg-white p-6 rounded-lg">
+    <VueFinalModal class="flex justify-center items-center w-full p-8">
+        <div class="grid grid-cols-1 gap-x-4 gap-y-4 bg-white p-3 rounded-lg">
             <div class="row">
                 <div id="cards-section"  class="bg-gray-700 opacity-70 p-12 max-md:hidden">
                     <div class="p-1 mx-7 flex flex-wrap gap-3 overflow-y-hidden hide-scrollbar">
