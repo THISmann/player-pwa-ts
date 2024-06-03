@@ -1,17 +1,17 @@
 <template>
     <VueFinalModal   class="flex justify-center items-center w-full p-8">
         <div class="grid grid-cols-1 gap-x-4 gap-y-4 bg-white p-3 rounded-lg  m-12">
-            <!-- <button class="ml-4 text-gray-500 hover:text-gray-700" @click="emitEventGeneral">  
+             <button class="ml-4 text-gray-500 hover:text-gray-700" @click="emit('update:modelValue', false)">  
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
-                </button> -->
+                </button> 
             <div class="row">
-                <div id="cards-section"  class="bg-gray-700 opacity-70 p-12 max-md:hidden">
+                <div id="cards-section"  class="bg-gray-700 rounded-md opacity-70 p-12 max-md:hidden">
                     <div class="p-1 mx-7 flex flex-wrap gap-3 overflow-y-hidden hide-scrollbar">
                         <div v-for="data in radioStore.currentRadio.song_history" :key="data.title"
                             class="lg:w-2/5 md:w-1/2 h-44 flex items-center px-4 shadow shadow-[#F76507] rounded-md text-ellipsis overflow-x-hidden bg-gray-700">
-                            <img :src="data.cover ?? img" class="rounded-lg h-40" :alt="data.title"
+                            <img :src="data.cover ?? img" class="rounded-lg w-1/2 h-40" :alt="data.title"
                                 @error="($event) => $event.target.src = img" />
                             <div class="h-full w-80">
                                 <h1
@@ -60,12 +60,20 @@ import { VueFinalModal } from 'vue-final-modal';
 const radioStore = useRadioStore();
 import img from "./logo.png";
 
-const showModal = ref(true);
-const emit = defineEmits(['close-event'])
+const showModal = ref(true); 
 
-const emitEventGeneral = () => {
-  emit('close-event');
-};
+
+// Define props
+const props = defineProps({ 
+  isVisible: {
+    type: Boolean,
+    default: false,
+  },
+});
+
+const emit = defineEmits<{
+  (e: 'update:modelValue', modelValue: boolean): void
+}>()
 
  
 

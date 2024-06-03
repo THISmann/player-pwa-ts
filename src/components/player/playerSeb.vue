@@ -208,9 +208,21 @@ const openModal1 = async () => await modal1.open();
 const modalQR = createUseModal(qrcode, "Qr Code");
 const openModalQR = async () => await modalQR.open();
 
-const modalHistorique = createUseModal(historique, "Qr Code");
+const modalHistorique = createUseModal(historique, "Historique");
 const openModalHis = async () => await modalHistorique.open();
-//const modalClose = //console.log('close')
+const modalClose = async () => await modalHistorique.close();
+
+// Modal state
+const isModalVisible = ref(false); 
+
+// Function to show the modal
+const showModal = () => {
+  isModalVisible.value = !isModalVisible.value;
+};
+
+// const modalClose = () => {
+//     alert("test radio")
+// };
 //async () => await modalHistorique.close();
 
 const modalErrorServer = createUseModal(errorServer, errorMsg.value);
@@ -282,7 +294,7 @@ watchEffect(() => {
     <div class="sm:overscroll-none" :style="divStyle">
         <div class="container-fluid m-0 p-2 content bg-gray-700 opacity-80">
             <div class="container-fluid space-y-7 lg:space-y-10 min-h-screen">
-                <ModalsContainer @close-event="modalClose" />
+                <ModalsContainer :isVisible="isModalVisible" @close="showModal" @click="modalClose"/>
                 <BluetoothModal :show="modal1.isOpen" @close="modal1.close" />
                 <div class="row">
                     <div :class="[
