@@ -1,6 +1,6 @@
 <template>
     <VueFinalModal   class="flex justify-center items-center w-full p-8">
-        <div class="grid grid-cols-1 gap-x-4 gap-y-4 bg-white p-3 rounded-lg  m-12">
+        <div class="grid grid-cols-1 gap-x-4 gap-y-4 bg-white p-3 rounded-lg  m-4">
              <button class="ml-4 text-gray-500 hover:text-gray-700" @click="emit('update:modelValue', false)">  
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
